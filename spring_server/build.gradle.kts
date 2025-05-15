@@ -33,6 +33,9 @@ dependencies {
 
     // h2db (for dev process)
     implementation("com.h2database:h2")
+
+    // logger
+    implementation("io.github.microutils:kotlin-logging-jvm:3.0.5")
 }
 
 kotlin {
