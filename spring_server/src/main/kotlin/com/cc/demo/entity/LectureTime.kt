@@ -14,7 +14,11 @@ data class LectureTime(
     @JoinColumn(name = "lecture_id")
     val lecture: Lecture,
 
+    /**
+     * day가 예약어임
+     */
     @Enumerated(EnumType.STRING)
+    @Column(name = "day_of_week")
     val day: DayOfWeek,
 
     val startTime: LocalTime,

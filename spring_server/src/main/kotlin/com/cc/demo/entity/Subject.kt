@@ -22,13 +22,8 @@ data class Subject(
     @OneToMany(mappedBy = "subject")
     val lectures: List<Lecture> = listOf(),
 
-    @ManyToMany
-    @JoinTable(
-        name = "subject_keywords",
-        joinColumns = [JoinColumn(name = "subject_id")],
-        inverseJoinColumns = [JoinColumn(name = "keyword_id")]
-    )
-    val keywords: List<Keyword> = listOf()
+    var aiDescription: String?,
 
-
+    @OneToMany(mappedBy = "subject", cascade = [CascadeType.ALL])
+    val breadthGeneralEducationList: List<BreadthGeneralEducation> = listOf()
 )

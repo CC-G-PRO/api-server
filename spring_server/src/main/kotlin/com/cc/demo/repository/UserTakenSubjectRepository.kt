@@ -3,4 +3,6 @@
 import com.cc.demo.entity.UserTakenSubject
 import org.springframework.data.jpa.repository.JpaRepository
 
-interface UserTakenSubjectRepository : JpaRepository<UserTakenSubject, Long>
+interface UserTakenSubjectRepository : JpaRepository<UserTakenSubject, Long> {
+    fun findByUserId(userId: Long): List<UserTakenSubject>
+}
