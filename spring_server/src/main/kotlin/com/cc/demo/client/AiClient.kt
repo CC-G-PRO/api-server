@@ -1,6 +1,6 @@
 package com.cc.demo.client
 
-import com.cc.demo.client.dto.AiFilterResponse
+import com.cc.demo.response.AiFilterResponse
 import com.cc.demo.entity.Lecture
 import mu.KotlinLogging
 import org.springframework.core.ParameterizedTypeReference

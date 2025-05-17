@@ -1,6 +1,15 @@
+# 여기서 ${VARIABLE:DEFAULT VALUE} 로 되어있는 것들은 모두
+# docker compose 내에서 .env 설정 또는 aws secrets로 설정하는 등
+# 배포 환경 별로 secret 설정 해야함.
+
 spring:
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:dev}
     # default : dev
     #  dev , prod
     #### development environment, production environment ####
+
+jwt:
+  secret: ${JWT_SECRET_KEY:FA5hihaye!!stthSusLriITsngAndLonKeyT!gSt64se12sptHaecreteaersAtStroorHSmUBAlgo}
+  expiration: ${JWT_EXPIRATION:2592000000}
+    # expiration 30 days
