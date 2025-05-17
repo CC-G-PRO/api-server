@@ -7,6 +7,7 @@ import com.cc.demo.repository.LectureRepository
 import com.cc.demo.repository.SubjectRepository
 import org.springframework.boot.ApplicationArguments
 import org.springframework.boot.ApplicationRunner
+import org.springframework.boot.CommandLineRunner
 import org.springframework.stereotype.Component
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -16,9 +17,9 @@ class LectureDataInitializer(
     private val subjectRepository: SubjectRepository,
     private val lectureRepository: LectureRepository,
     private val categoryMainRepository: CategoryMainRepository,
-) : ApplicationRunner {
+) : CommandLineRunner {
 
-    override fun run(args: ApplicationArguments) {
+    override fun run(vararg args: String?) {
        // if (lectureRepository.count() > 0) return
 
         val categories = listOf("전공필수", "전공선택", "교양필수", "교양선택")
@@ -36,7 +37,8 @@ class LectureDataInitializer(
                 credit = (2..4).random(),
                 targetGrade = "${(1..4).random()}학년",
                 categoryMain = category,
-                aiDescription = "이건 에이아이가 만들어서 넣어줄거야"
+                typeNumber = 1,
+                year = 2025
             )
             subjectRepository.save(subject)
         }
@@ -47,17 +49,18 @@ class LectureDataInitializer(
                 year = 2025,
                 semester = if (it % 2 == 0) 1 else 2,
                 professorName = "교수${('A'..'Z').random()}",
-                section = "00${(1..3).random()}",
+                lectureCode = "00${(1..3).random()}",
                 isEnglish = (0..1).random() == 1,
                 lecturePlace = "정보${(65..70).random().toChar()}${100 + it}",
                 capacity = listOf(40, 50, 60).random(),
                 syllabusUrl = "https://example.com/syllabus/cs$it",
                 note = "특이사항 없음",
                 language = if ((0..1).random() == 1) "한국어" else "영어",
-                shortDescription = "과목에 대한 간단한 설명 $it",
+                aiDescription = "과목에 대한 AI의 설명이다 $it",
                 createdAt = LocalDateTime.now(),
                 subject = subject,
-                times = mutableListOf()
+                times = mutableListOf(),
+                subjectName = subject.subjectName,
             )
 
                 val time1 = LectureTime(
