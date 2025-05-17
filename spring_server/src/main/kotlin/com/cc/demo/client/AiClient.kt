@@ -29,8 +29,7 @@ class AiClient(
                 mapOf(
                     "lectureId" to lecture.id,
                     "courseName" to lecture.subject.subjectName,
-                    "description" to lecture.shortDescription,
-                    "aiDescription" to lecture.subject.aiDescription
+                    "aiDescription" to lecture.aiDescription
                 )
             }
         )

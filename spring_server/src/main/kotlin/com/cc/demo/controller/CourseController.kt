@@ -24,7 +24,7 @@ class CourseController(
     ): ResponseEntity<List<CourseResponse>> {
         log.info { "📥 /courses 요청 수신: $request" }
 
-        // TODO: 인증 미구현이므로 임시 userId = 1
+        // TODO: 테스트 목적, 임시 userId = 1
         val userId = 1L
         val result = courseService.searchLectures(request, userId)
 
