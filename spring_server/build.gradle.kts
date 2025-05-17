@@ -39,6 +39,7 @@ dependencies {
 
     //swagger
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0")
+    implementation("org.apache.pdfbox:pdfbox:2.0.27") //pdf parsing 용
 
     //bootRun dev 환경에서만
     developmentOnly("org.springframework.boot:spring-boot-devtools")
