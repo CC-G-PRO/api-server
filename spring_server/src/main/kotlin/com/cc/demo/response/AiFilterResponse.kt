@@ -1,4 +1,6 @@
-package com.cc.demo.client.dto
+package com.cc.demo.response
+
+import com.cc.demo.client.dto.AiFilteredLectureDto
 
 
 data class AiFilterResponse(
