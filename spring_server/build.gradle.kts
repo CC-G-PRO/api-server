@@ -36,6 +36,13 @@ dependencies {
 
     // logger
     implementation("io.github.microutils:kotlin-logging-jvm:3.0.5")
+
+    //swagger
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0")
+
+    //bootRun dev 환경에서만
+    developmentOnly("org.springframework.boot:spring-boot-devtools")
+
 }
 
 kotlin {
