@@ -1,0 +1,26 @@
+services:
+  spring:
+    build:
+      context: ./spring_server
+      dockerfile: Dockerfile.dev  #dev일 때 dev용 Dockerfile 사용
+
+    volumes:
+      - ./spring_server:/app  #prod 에서는 제거해야함.
+    container_name: spring-app
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+    networks:
+      - backend
+
+  fastapi:
+    build: ./fastapi_server
+    container_name: fastapi-app
+    expose:
+      - "8000"
+    networks:
+      - backend
+
+networks:
+  backend:
