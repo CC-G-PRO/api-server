@@ -109,7 +109,7 @@ def parse_graduation_data(lines: list[str]) -> dict:
     result = {}
 
     key_map = {
-        "수강학점": "grades",
+        "수강학점": "credit",
         "취득학점": "major",
         "전공": "liberal_art",
         "교양": "grades",

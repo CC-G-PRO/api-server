@@ -1,6 +1,7 @@
 package com.cc.demo.controller
 
-import com.cc.demo.response.PdfValidationResponse
+import com.cc.demo.response.CommonResponse
+import com.cc.demo.response.ReportUploadResponse
 import com.cc.demo.service.PdfParsingService
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.text.PDFTextStripper
@@ -22,7 +23,7 @@ class ReportParserController (
     private val validStartRegex = Regex("^[es#@*0-9\$G%]")
 
     @PostMapping("/valid", consumes = ["multipart/form-data"])
-    fun validatePdf(@RequestParam("file") file: MultipartFile): ResponseEntity<PdfValidationResponse> {
+    fun validatePdf(@RequestParam("file") file: MultipartFile): ResponseEntity<CommonResponse> {
         return try {
             val text = extractTextFromPdf(file.inputStream)
             val decodedText = String(text.toByteArray(), Charset.forName("euc-kr")).trim()
@@ -30,14 +31,14 @@ class ReportParserController (
             val firstChar = decodedText.firstOrNull()
             if (firstChar != null && validStartRegex.matches(firstChar.toString())) {
                 ResponseEntity.ok(
-                    PdfValidationResponse(
+                    CommonResponse(
                         valid = true,
                         message = "유효한 졸업사정진단표 파일입니다."
                     )
                 )
             } else {
                 ResponseEntity.badRequest().body(
-                    PdfValidationResponse(
+                    CommonResponse(
                         valid = false,
                         message = "파일형식이 올바르지 않습니다. 졸업 진단표 파일 형식이 아닙니다."
                     )
@@ -45,7 +46,7 @@ class ReportParserController (
             }
         } catch (e: Exception) {
             ResponseEntity.badRequest().body(
-                PdfValidationResponse(
+                CommonResponse(
                     valid = false,
                     message = "PDF 파싱에 실패했습니다: ${e.message}"
                 )
@@ -60,14 +61,19 @@ class ReportParserController (
     }
 
     @PostMapping("/upload", consumes = ["multipart/form-data"])
-    fun handlePdfUpload(@RequestParam("file") file: MultipartFile?): ResponseEntity<String> {
+    fun handlePdfUpload(@RequestParam("file") file: MultipartFile?): ResponseEntity<Any> {
         if (file == null || file.isEmpty) {
             return ResponseEntity.badRequest().body("파일이 없습니다.")
         }
 
         return try {
             val fastApiResponse = pdfParsingService.sendPdfToFastApi(file)
-            ResponseEntity.ok(fastApiResponse)
+
+            ResponseEntity.ok(ReportUploadResponse(
+                message = "success to parsing data",
+                report_id = 1,
+                data = fastApiResponse
+            ))
         } catch (e: Exception) {
             ResponseEntity.internalServerError().body("FastAPI 요청 실패: ${e.message}")
         }

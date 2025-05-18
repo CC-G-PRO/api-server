@@ -5,6 +5,7 @@ import com.cc.demo.security.JwtAuthenticationFilter
 import mu.KotlinLogging
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Profile
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
@@ -33,7 +34,9 @@ class SecurityConfig(
 
             .authorizeHttpRequests {
                 it
-                    .requestMatchers("/auth/**", "/h2-console/**").permitAll()
+                    .requestMatchers("/auth/**",
+                        "/h2-console/**",
+                    ).permitAll()
                   //  .requestMatchers("/actuator/health", "/actuator/info").permitAll() // for health check
                     .anyRequest().authenticated()
             }
