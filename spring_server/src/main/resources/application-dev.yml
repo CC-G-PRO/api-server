@@ -21,3 +21,6 @@ spring:
   h2:
     console:
       enabled: true
+      path: /h2-console
+      settings: #for using in docker container
+        web-allow-others: true

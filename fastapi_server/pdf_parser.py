@@ -2,6 +2,7 @@ import pdfplumber
 import re
 from enum import Enum, auto
 import json
+from datetime import datetime
 
 class Section(Enum):
     NONE = auto()
@@ -63,17 +64,17 @@ def parse_student_info(lines: list[str]) -> dict:
 
     #key 에 해당하는 데이터들
     key_order = [ 
-        ("학 번", "학번"),
-        ("성 명", "성명"),
-        ("학 과", "학과"),
-        ("학 년", "학년"),
-        ("등록횟수", "등록횟수"),
-        ("학적상태", "학적상태"),
-        ("입 학 구 분", "입학구분"),
-        ("졸업기준학점(년도)", "졸업기준학점(년도)"),
-        ("외국인여부", "외국인여부"),
-        ("최종변동", "최종변동"),
-        ("최종판정", "최종판정"),
+        ("학 번", "student_number"),
+        ("성 명", "student_name"),
+        ("학 과", "department"),
+        ("학 년", "grade"),
+        ("등록횟수", "enroll_semester"),
+        ("학적상태", "status"),
+        ("입 학 구 분", "enroll_division"),
+        ("졸업기준학점(년도)", "curriculum_year"),
+        ("외국인여부", "is_foreign"),
+        ("최종변동", "latest_modified"),
+        ("최종판정", "fianl_judgment"),
     ]
 
     full_text = ' '.join(lines)
@@ -86,15 +87,18 @@ def parse_student_info(lines: list[str]) -> dict:
 
     match = re.search(r'자료생성일시\s+대상자\s+([0-9:/\s]+)', full_text)
     if match:
-        result["자료 생성 일시"] = match.group(1).strip()
+        dt = datetime.strptime(match.group(1).strip(), "%Y/%m/%d %H:%M:%S")
+        iso_format_str = dt.isoformat()
+
+        result["evaluation_date"] = iso_format_str
 
     match = re.search(r'이수과목\s+([0-9:/\s]+)', full_text)
     if match:
-        result["이수 과목 기준 일시"] = match.group(1).strip()
+        result["reference_date_completed_courses"] = match.group(1).strip()
 
     match = re.search(r'사정처리\s+([0-9:/\s]+)', full_text)
     if match:
-        result["자료 출력 일시"] = match.group(1).strip()
+        result["data_printed_date"] = match.group(1).strip()
 
     return result
 def parse_graduation_data(lines: list[str]) -> dict:
@@ -108,17 +112,33 @@ def parse_graduation_data(lines: list[str]) -> dict:
 
     result = {}
 
+    key_map = {
+        "수강학점": "credit",
+        "취득학점": "major",
+        "전공": "liberal_art",
+        "교양": "grades",
+        "졸업평점": "english",
+        "영어강의": "paper",
+        "논문": "division",
+        "TOPIK": "foreign",
+    }
+
     for idx, key in enumerate(keys):
-        if key in ["구분", "판정", "판정 기준", ""]: continue
+        if key in ["구분", "판정", "판정 기준" ,""]: continue
             
         output = {}
-        output["취득"] = target_values[idx + 1]
-        output["기준"] = current_values[idx + 1]
-        output["판정"] = False if validation_values[idx+1] == "미통과" else True
+        output["earned"] = target_values[idx + 1]
+        output["required"] = current_values[idx + 1]
+        output["valid"] = False if validation_values[idx+1] == "미통과" else True
         
-        result[key] = output
+        if(key == "수강학점"):
+            match = re.search(r'\(([^)]+)\)', target_values[idx + 1])
+            output["earned"] = match.group(1)
+        
+        result[key_map[key]] = output
     
     return result
+
 def parse_course_data(lines : list[str]) -> dict:
     parsed_rows = []
     current_category = None
@@ -142,13 +162,19 @@ def parse_course_data(lines : list[str]) -> dict:
             credit = match.group(3)  
             year = match.group(4)
             semester = match.group(5)
+            
+            if semester in ["14", "15", "16", "17"]:
+                category = "liberal_art"
+            else :
+                category = "major"
 
             parsed_rows.append({
-                "이수구분": current_category,
-                "과목코드": subject_code,
-                "과목명": subject_name,
-                "수강년도": year,
-                "수강학기": semester
+                "subject_code": current_category,
+                "lecture_code": subject_code,
+                "subject_name": subject_name,
+                "enroll_year": year,
+                "enroll_semester": semester,
+                "category" : category
             })
 
     return parsed_rows
@@ -171,7 +197,7 @@ def parse_generation_education(lines: list[str]) -> list[dict]:
         name = match.group('name').strip()
         area = match.group('area1')
         if area is not None:
-            area_str = f"{match.group('area1')}/{match.group('area2')}"
+            area_str = f"{match.group('area1')}/{match.group('area2')}" #영역
         else:
             area_str = None
 
@@ -179,10 +205,11 @@ def parse_generation_education(lines: list[str]) -> list[dict]:
         pass_result = parse_pass(match.group('pass'))
 
         result.append({
-            "이수 구분": name,
-            "영역(취득/기준)": area_str,
-            "학점(취득/기준)": score_str,
-            "판정": pass_result
+            "category": name,
+            # "영역(취득/기준)": area_str,
+            "earned" : match.group('score1'),
+            "required": match.group('score2'),
+            "valid": pass_result
         })
 
     return result
@@ -191,21 +218,21 @@ def parse_major_education(lines: list[str]) -> dict:
     tokens = data_line.split()
 
     result = {
-        "심화전공": tokens[2],
-        "기준연도": int(tokens[3]),
-        "전공기초": {
-            "취득": int(tokens[4]),
-            "기준": int(tokens[6]),
+        "advanced_major": tokens[2],
+        "reference_year": int(tokens[3]),
+        "major_basic": {
+            "earned": int(tokens[4]),
+            "required": int(tokens[6]),
         },
-        "전필": {
-            "취득": int(tokens[7]),
-            "기준": int(tokens[9]),
+        "major_required": {
+            "earned": int(tokens[7]),
+            "required": int(tokens[9]),
         },
-        "필수+선택": {
-            "취득": int(tokens[10]),
-            "기준": int(tokens[12]),
+        "major_required_plus_elective": {
+            "earned": int(tokens[10]),
+            "required": int(tokens[12]),
         },
-        "판정": tokens[13] != "미통과"
+        "valid": tokens[13] != "미통과"
     }
 
     return result
@@ -216,48 +243,25 @@ def parse_major_requirements(data: list) -> dict:
         if "산학필수" in line:
             match = re.search(r"산학필수.*(\d+)\s*/\s*(\d+)", line)
             if match:
-                result["산학 필수"] = {
-                    "수강학점": int(match.group(1)),
-                    "기준학점": int(match.group(2))
+                result["major_industry_required"] = {
+                    "earned": int(match.group(1)),
+                    "required": int(match.group(2))
                 }
 
         elif "전공필수" in line:
             match = re.search(r"전공필수.*(\d+)\s*/\s*(\d+)", line)
             if match:
-                result["전공필수"] = {
-                    "수강과목수": int(match.group(1)),
-                    "기준과목수": int(match.group(2))
+                result["major_required_num"] = {
+                    "earned": int(match.group(1)),
+                    "required": int(match.group(2))
                 }
 
     return result
-def parse_graduation_requirements(data: list) -> dict:
-    result = {}
 
-    for line in data:
-        #산학필수 
-        if "산학필수" in line:
-            match = re.search(r"산학필수.*(\d+)\s*/\s*(\d+)", line)
-            if match:
-                result["산학 필수"] = {
-                    "수강학점": int(match.group(1)),
-                    "기준학점": int(match.group(2))
-                }
-
-        #전공필수
-        elif "전공필수" in line:
-            match = re.search(r"전공필수.*(\d+)\s*/\s*(\d+)", line)
-            if match:
-                result["전공필수"] = {
-                    "수강과목수": int(match.group(1)),
-                    "기준과목수": int(match.group(2))
-                }
-
-    return result
 def extract_major_requirement(data: str) -> list:
     result = [] 
     
     for idx, line in enumerate(data.splitlines()):
-        print(line)
         if line in "졸업필수":
             result = data.splitlines()[idx:]
             break 
