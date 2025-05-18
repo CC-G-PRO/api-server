@@ -127,6 +127,9 @@ def parse_graduation_data(lines: list[str]) -> dict:
         output["required"] = current_values[idx + 1]
         output["valid"] = False if validation_values[idx+1] == "미통과" else True
         
+        if(key == "수강학점"):
+            match = re.search(r'\(([^)]+)\)', target_values[idx + 1])
+            output["earned"] = match.group(1)
         
         result[key_map[key]] = output
     
@@ -237,16 +240,16 @@ def parse_major_requirements(data: list) -> dict:
             match = re.search(r"산학필수.*(\d+)\s*/\s*(\d+)", line)
             if match:
                 result["major_industry_required"] = {
-                    "earned_credit": int(match.group(1)),
-                    "required_credit": int(match.group(2))
+                    "earned": int(match.group(1)),
+                    "required": int(match.group(2))
                 }
 
         elif "전공필수" in line:
             match = re.search(r"전공필수.*(\d+)\s*/\s*(\d+)", line)
             if match:
                 result["major_required_num"] = {
-                    "earned_subject_num": int(match.group(1)),
-                    "required_subject_num": int(match.group(2))
+                    "earned": int(match.group(1)),
+                    "required": int(match.group(2))
                 }
 
     return result
