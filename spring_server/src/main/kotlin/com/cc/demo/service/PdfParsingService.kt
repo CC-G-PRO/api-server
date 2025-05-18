@@ -58,7 +58,7 @@ class PdfParsingService (
 
     @Transactional
     fun processReportUpload(file: MultipartFile, userId: Long): ReportUploadResponse {
-        userTakenSubjectRepository.deleteByUserId(userId)
+        userTakenSubjectRepository.deleteAllByUserId(userId)
         graduationEvaluationRepository.deleteByUserId(userId)
 
         val fastApiResponse = sendPdfToFastApi(file)
