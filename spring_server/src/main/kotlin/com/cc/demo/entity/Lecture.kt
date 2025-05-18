@@ -1,7 +1,6 @@
 package com.cc.demo.entity
 
-import com.cc.demo.response.CourseResponse
-import com.cc.demo.response.LectureTimeResponse
+
 import jakarta.persistence.*
 import java.time.LocalDateTime
 
@@ -19,19 +18,20 @@ data class Lecture(
     val year: Int,
     val semester: Int,
     val professorName: String,
-    val section: String,
+    val lectureCode: String,
     val isEnglish: Boolean,
     val lecturePlace: String,
     val capacity: Int,
     val syllabusUrl: String,
     val note: String,
     val language: String,
-    val shortDescription: String? = null,
     val createdAt: LocalDateTime,
-
+    var aiDescription: String?,
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "subject_id")
     val subject: Subject,
+    @Column(name = "subject_nm")
+    val subjectName: String,
 
 
     @OneToMany(mappedBy = "lecture", cascade = [CascadeType.ALL], orphanRemoval = true)
