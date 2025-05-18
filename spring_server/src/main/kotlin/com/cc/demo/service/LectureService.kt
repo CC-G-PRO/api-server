@@ -21,7 +21,8 @@ class LectureService(
 
         val excludeCodes = if (request.excludeCompleted) {
             val codes = userTakenSubjectRepository.findByUserId(userId).map { it.subjectCode }
-            log.info { "⛔ 수강 완료 과목 제외: $codes" }
+            log.info { "⛔ 수강 완" +
+                    "료 과목 제외: $codes" }
             codes
         } else emptyList()
 

@@ -1,67 +1,118 @@
 package com.cc.demo.response
 
+import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-
+import com.fasterxml.jackson.annotation.JsonProperty
 
 data class ReportUploadResponse(
     val message: String,
-    val report_id: Long,
+
+    @JsonProperty("report_id")
+    val reportId: Long,
+
     val data: ReportData
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class ReportData(
-    val basic_info: BasicInfo,
-    val graduation_info: GraduationInfo,
-    val liberal_arts_info: List<LiberalArtsInfo>,
-    val major_info: MajorInfo
+    @JsonProperty("basic_info")
+    val basicInfo: BasicInfo,
+
+    @JsonProperty("graduation_info")
+    val graduationInfo: GraduationInfo,
+
+    @JsonProperty("liberal_arts_info")
+    val liberalArtsInfo: List<LiberalArtsInfo>,
+
+    @JsonProperty("major_info")
+    val majorInfo: MajorInfo,
+
+    @JsonProperty("course_info")
+    val courseInfo: List<CourseInfo>
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class BasicInfo(
-    val student_number: String,
-    val student_name: String,
+    @JsonProperty("student_number")
+    val studentNumber: String,
+
+    @JsonProperty("student_name")
+    val studentName: String,
+
     val department: String,
-    val grade: String,
-    val enroll_semester: String,
-    val evaluation_date: String
+
+    val grade: Int,
+
+    @JsonProperty("enroll_semester")
+    val enrollSemester: Int,
+
+    @JsonProperty("evaluation_date")
+    val evaluationDate: String
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GraduationInfo(
-    val credit: GraduationRequirement,
-    val grades: GraduationRequirement,
-    val english: GraduationRequirement,
-    val paper: GraduationRequirement
+    val credit: GraduationRequirement<Int>,
+    val grades: GraduationRequirement<Float>,
+    val english: GraduationRequirement<Int>,
+    val paper: GraduationRequirement<Int>
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class GraduationRequirement(
-    val earned: String,
-    val required: String,
+data class GraduationRequirement<T>(
+    val earned: T,
+    val required: T,
     val valid: Boolean
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class LiberalArtsInfo(
     val category: String,
-    val required: String,
-    val earned: String,
+    val required: Int,
+    val earned: Int,
     val valid: Boolean
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class MajorInfo(
-    val advanced_major: String,
-    val reference_year: Int,
-    val major_basic: MajorRequirement,
-    val major_required: MajorRequirement,
-    val major_required_plus_elective: MajorRequirement,
+    @JsonProperty("advanced_major")
+    val advancedMajor: String,
+
+    @JsonProperty("reference_year")
+    val referenceYear: String,
+
+    @JsonProperty("major_basic")
+    val majorBasic: RequirementCredit,
+
+    @JsonProperty("major_required")
+    val majorRequired: RequirementCredit,
+
+    @JsonProperty("major_required_plus_elective")
+    val majorRequiredPlusElective: RequirementCredit,
+
     val passed: Boolean,
-    val major_industry_required: MajorRequirement
+
+    @JsonProperty("major_industry_required")
+    val majorIndustryRequired: RequirementCredit
 )
 
-data class MajorRequirement(
-    val earned: String,
-    val required: String
+data class RequirementCredit(
+    val earned: Int,
+    val required: Int
 )
+
+data class CourseInfo(
+    @JsonProperty("subject_code")
+    val subjectCode: String,
+    @JsonProperty("lecture_code")
+    val lectureCode: String,
+    @JsonProperty("subject_name")
+    val subjectName: String,
+    @JsonProperty("enroll_year")
+    val enrollYear: String,
+    @JsonProperty("enroll_semester")
+    val enrollSemester: String,
+
+    val category: String
+)
+

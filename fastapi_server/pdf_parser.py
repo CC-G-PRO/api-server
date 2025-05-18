@@ -2,6 +2,7 @@ import pdfplumber
 import re
 from enum import Enum, auto
 import json
+from datetime import datetime
 
 class Section(Enum):
     NONE = auto()
@@ -86,7 +87,10 @@ def parse_student_info(lines: list[str]) -> dict:
 
     match = re.search(r'자료생성일시\s+대상자\s+([0-9:/\s]+)', full_text)
     if match:
-        result["evaluation_date"] = match.group(1).strip()
+        dt = datetime.strptime(match.group(1).strip(), "%Y/%m/%d %H:%M:%S")
+        iso_format_str = dt.isoformat()
+
+        result["evaluation_date"] = iso_format_str
 
     match = re.search(r'이수과목\s+([0-9:/\s]+)', full_text)
     if match:
@@ -170,7 +174,7 @@ def parse_course_data(lines : list[str]) -> dict:
                 "subject_name": subject_name,
                 "enroll_year": year,
                 "enroll_semester": semester,
-                "creteria" : category
+                "category" : category
             })
 
     return parsed_rows
@@ -258,7 +262,6 @@ def extract_major_requirement(data: str) -> list:
     result = [] 
     
     for idx, line in enumerate(data.splitlines()):
-        print(line)
         if line in "졸업필수":
             result = data.splitlines()[idx:]
             break 

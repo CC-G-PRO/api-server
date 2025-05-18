@@ -1,10 +1,17 @@
 package com.cc.demo.service
 
+import com.cc.demo.converter.GraduationEvaluationConverter
+import com.cc.demo.repository.GraduationEvaluationRepository
+import com.cc.demo.repository.UserRepository
+import com.cc.demo.repository.UserTakenSubjectRepository
 import com.cc.demo.response.ReportData
+import com.cc.demo.response.ReportUploadResponse
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import jakarta.transaction.Transactional
+import org.apache.pdfbox.pdmodel.PDDocument
+import org.apache.pdfbox.text.PDFTextStripper
 import org.springframework.core.io.ByteArrayResource
-import org.springframework.core.io.InputStreamResource
 import org.springframework.http.*
 import org.springframework.stereotype.Service
 import org.springframework.util.LinkedMultiValueMap
@@ -12,9 +19,15 @@ import org.springframework.util.MultiValueMap
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.multipart.MultipartFile
 import java.io.InputStream
+import java.nio.charset.Charset
 
 @Service
-class PdfParsingService {
+class PdfParsingService (
+    private val userRepository: UserRepository,
+    private val userTakenCourseService: UserTakenCouseService,
+    private val graduationEvaluationRepository: GraduationEvaluationRepository,
+    private val userTakenSubjectRepository: UserTakenSubjectRepository
+) {
 
     fun sendPdfToFastApi(file: MultipartFile): ReportData {
         val headers = HttpHeaders()
@@ -42,4 +55,46 @@ class PdfParsingService {
             throw RuntimeException("FastAPI 요청 실패: ${response.statusCode}")
         }
     }
+
+    @Transactional
+    fun processReportUpload(file: MultipartFile, userId: Long): ReportUploadResponse {
+        userTakenSubjectRepository.deleteByUserId(userId)
+        graduationEvaluationRepository.deleteByUserId(userId)
+
+        val fastApiResponse = sendPdfToFastApi(file)
+
+        val user = userRepository.findById(userId).orElseThrow { RuntimeException("User not found") }
+
+        userTakenCourseService.saveCourseInfos(userId, fastApiResponse.courseInfo)
+
+        val graduationEvaluation = GraduationEvaluationConverter.convertToGraduationEvaluation(fastApiResponse, user)
+
+        graduationEvaluationRepository.save(graduationEvaluation)
+
+        return ReportUploadResponse(
+            message = "success to parsing data",
+            reportId = graduationEvaluation.id,
+            data = fastApiResponse
+        )
+    }
+
+
+    fun validatePdf(fileInputStream: InputStream, charset: Charset = Charset.forName("euc-kr")): Boolean {
+        val validStartRegex = Regex("^[es#@*0-9\$G%]")
+        val text = extractTextFromPdf(fileInputStream)
+        val decodedText = String(text.toByteArray(), charset).trim()
+        val firstChar = decodedText.firstOrNull()
+
+        return firstChar != null && validStartRegex.matches(firstChar.toString())
+    }
+
+    private fun extractTextFromPdf(input: InputStream): String {
+        PDDocument.load(input).use { document ->
+            return PDFTextStripper().getText(document)
+        }
+    }
+
+
+
+
 }
