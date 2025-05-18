@@ -4,10 +4,12 @@ import com.cc.demo.entity.RecommendedTimetable
 import com.cc.demo.repository.LectureCartRepository
 import com.cc.demo.response.RecommendedTimetableResponse
 import com.cc.demo.response.ReportData
+import com.cc.demo.response.TimetableResponse
 import com.cc.demo.service.TimeTableService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
@@ -30,7 +32,7 @@ class TimeTableController (
             val timetables = timeTableService.generateTimeTable(userId, minCredit, maxCredit)
 
             val response = RecommendedTimetableResponse(
-                filteredTimetables = timetables.map { RecommendedTimetableResponse.from(it) }
+                filteredTimetables = timetables.map { TimetableResponse.from(it) }
             )
 
             ResponseEntity.ok(response)
@@ -39,6 +41,11 @@ class TimeTableController (
             ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(mapOf("error" to "Failed to generate timetables", "details" to e.localizedMessage))
         }
+    }
+
+    @PostMapping("/")
+    fun search(){
+
     }
 
 }

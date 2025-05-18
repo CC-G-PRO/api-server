@@ -17,9 +17,10 @@ class TimeTableService(
     val recommendedTimetableRepository: RecommendedTimetableRepository,
 ) {
 
+    //Todo: generateTime 하기 전에 all delete 하고 해야할 듯.
     @Transactional
     fun generateTimeTable(userId: Long, minCredit: Int, maxCredit: Int) : List<RecommendedTimetable> {
-        val user = userRepository.findById(userId).orElseThrow { IllegalArgumentException("Not Found User!!") }
+        val user = userRepository.findById(userId).orElseThrow { IllegalArgumentException("User를 찾을 수 없습니다!!") }
         val carts = lectureCartRepository.findByUserId(userId)
         val lectures = carts.map { it.lecture }
         println("Lectures in cart:")
