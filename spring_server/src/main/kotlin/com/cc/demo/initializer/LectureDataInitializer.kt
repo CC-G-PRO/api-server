@@ -8,10 +8,12 @@ import com.cc.demo.repository.SubjectRepository
 import org.springframework.boot.ApplicationArguments
 import org.springframework.boot.ApplicationRunner
 import org.springframework.boot.CommandLineRunner
+import org.springframework.core.annotation.Order
 import org.springframework.stereotype.Component
 import java.time.LocalDateTime
 import java.time.LocalTime
 
+@Order(2)
 @Component
 class LectureDataInitializer(
     private val subjectRepository: SubjectRepository,
@@ -63,16 +65,22 @@ class LectureDataInitializer(
                 subjectName = subject.subjectName,
             )
 
-                val time1 = LectureTime(
-                    day = DayOfWeek.entries.toTypedArray().slice(0..4).random() ,
-                    startTime = LocalTime.of((8..14).random(), 0),
-                    endTime = LocalTime.of((15..18).random(), 0),
+            val weekday1 = listOf(DayOfWeek.Mon, DayOfWeek.Tue)
+            val weekday2 = listOf(DayOfWeek.Wed, DayOfWeek.Thu, DayOfWeek.Fri)
+
+            val lectureTime1 = makeTime()
+            val lectureTime2 = makeTime()
+
+            val time1 = LectureTime(
+                    day = weekday1.random(),
+                    startTime = lectureTime1[0],
+                    endTime = lectureTime1[1],
                     lecture = lecture
                 )
                 val time2 = LectureTime(
-                    day = DayOfWeek.entries.toTypedArray().slice(0..4).random() ,
-                    startTime = LocalTime.of((8..14).random(), 0),
-                    endTime = LocalTime.of((15..18).random(), 0),
+                    day = weekday2.random(),
+                    startTime = lectureTime2[0],
+                    endTime = lectureTime2[1],
                     lecture = lecture
                 )
                 lecture.times += listOf(time1, time2)
@@ -81,5 +89,14 @@ class LectureDataInitializer(
 
 
         println("✅ 테스트용 Subject/Category/Lecture 50개 생성 완료")
+    }
+    fun makeTime(): List<LocalTime> {
+        val startHour = (8..14).random()
+        val endHour = (startHour + 1..(startHour + 3).coerceAtMost(18)).random()
+
+        val startTime = LocalTime.of(startHour, 0)
+        val endTime = LocalTime.of(endHour, 0)
+
+        return listOf(startTime, endTime)
     }
 }
