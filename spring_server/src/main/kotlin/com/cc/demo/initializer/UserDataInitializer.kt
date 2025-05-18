@@ -4,9 +4,11 @@ import com.cc.demo.entity.User
 import com.cc.demo.repository.UserRepository
 import mu.KotlinLogging
 import org.springframework.boot.CommandLineRunner
+import org.springframework.core.annotation.Order
 import org.springframework.stereotype.Component
 import java.time.LocalDateTime
 
+@Order(1)
 @Component
 class UserDataInitializer(
     private val userRepository: UserRepository

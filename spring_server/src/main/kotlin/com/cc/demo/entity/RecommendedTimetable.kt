@@ -14,5 +14,13 @@ data class RecommendedTimetable(
     val user: User,
 
     val description: String? = null,
-    val createdAt: LocalDateTime
-)
+    val createdAt: LocalDateTime,
+
+    @OneToMany(
+        mappedBy = "timetable",
+        cascade = [CascadeType.ALL],
+        orphanRemoval = true,
+        fetch = FetchType.LAZY
+    )
+    val lectures: MutableList<RecommendedTimetableLecture> = mutableListOf()
+    )
