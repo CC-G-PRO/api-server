@@ -13,7 +13,7 @@ data class LectureCart(
     @JoinColumn(name = "user_id")
     val user: User,
 
-    val priority: Int,
+    var priority: Int,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "lecture_id")
