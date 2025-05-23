@@ -19,5 +19,4 @@ data class TimeTable(
     val type: TimeTableType = TimeTableType.GENERATED, //default 로 자동 생성.
 
     val createdAt: LocalDateTime,
-
     )

@@ -80,8 +80,10 @@ class TimeTableController (
             ResponseEntity.status(500).body(e.message)
         }
     }
+
+    //저장이 필요한 경우에는 단순히 id 값만 넘기면 되는 로직임.
     @PutMapping("/{id}")
-    fun deleteTimeTable(@PathVariable id: Long): ResponseEntity<Any> {
+    fun putTimeTable(@PathVariable id: Long): ResponseEntity<Any> {
         return try {
             timeTableService.deleteTimetable(id)
             ResponseEntity.ok(mapOf("message" to "시간표가 성공적으로 삭제되었습니다. id=$id"))

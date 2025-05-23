@@ -5,9 +5,12 @@ import com.cc.demo.entity.TimeTable
 import com.cc.demo.entity.TimeTableLecture
 import com.cc.demo.enumerate.TimeTableType
 import com.cc.demo.repository.LectureCartRepository
+import com.cc.demo.repository.LectureRepository
 import com.cc.demo.repository.TimetableLectureRepository
 import com.cc.demo.repository.TimetableRepository
 import com.cc.demo.repository.UserRepository
+import com.cc.demo.request.TimeTableCreateRequest
+import com.cc.demo.request.TimeTableUpdateRequest
 import com.cc.demo.response.TimetableResponse
 import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
@@ -18,7 +21,9 @@ class TimeTableService(
     val lectureCartRepository: LectureCartRepository,
     val userRepository: UserRepository,
     val timetableRepository: TimetableRepository,
-    val timetableLectureRepository : TimetableLectureRepository
+    val timetableLectureRepository: TimetableLectureRepository,
+    private val lectureService: LectureService,
+    private val lectureRepository: LectureRepository
 ) {
 
     @Transactional
@@ -137,6 +142,53 @@ class TimeTableService(
         return false
     }
 
+    @Transactional
+    fun createTimeTables(content : TimeTableCreateRequest, userId : Long) : TimetableResponse {
+        val user = userRepository.findById(userId)
+            .orElseThrow { IllegalArgumentException("User를 찾을 수 없습니다!") }
+
+        //create timetable
+        val timetable = TimeTable(user = user , createdAt = LocalDateTime.now() )
+        timetableRepository.save(timetable)
+
+        val lectures: List<TimeTableLecture> = content.lectures.map { lectureId ->
+            val lecture = lectureRepository.findById(lectureId)
+                .orElseThrow { IllegalArgumentException("해당 강의를 찾을 수 없습니다") }
+
+            val ttl = TimeTableLecture(
+                timetable = timetable,
+                lecture = lecture
+            )
+            timetableLectureRepository.save(ttl)
+
+            ttl
+        }
+        return TimetableResponse.from(timetable, lectures)
+    }
+
+    @Transactional
+    fun updateTimeTable(
+        content : TimeTableUpdateRequest,
+        userId : Long,
+        timeTableId : Long,
+    ) : TimetableResponse {
+        //is exist time table and belong to user?
+        val user = userRepository.findById(userId)
+
+        val timetable = timetableRepository.findById(timeTableId)
+            .orElseThrow {IllegalArgumentException("해당 시간표가 존재하지 않습니다. id=$timeTableId")  }
+        if (timetable.user.id != userId) {
+            throw IllegalArgumentException("해당 시간표가 존재하지 않습니다")
+        }
+
+        //time table type 수정
+        if(timetable.type == )
+
+
+    }
+
+
+
     fun getTimeTables(userId: Long, type : TimeTableType): List<TimetableResponse> {
         val timetables = timetableRepository.findByUserId(userId)
             .filter { it.type == type }
@@ -155,7 +207,6 @@ class TimeTableService(
         val lectures = timetableLectureRepository.findByTimetableId(timetable.id)
         return TimetableResponse.from(timetable, lectures)
     }
-
 
     //생성된 Get timetable
     //post 요청
