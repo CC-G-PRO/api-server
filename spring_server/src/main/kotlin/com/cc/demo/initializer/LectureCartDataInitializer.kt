@@ -28,13 +28,13 @@ class LectureCartDataInitializer (
             return
         }
 
-        val lectures = lectureRepository.findAllById((1L..15L).toList())
-        if (lectures.size < 15) {
+        val lectures = lectureRepository.findAllById((1L..10L).toList())
+        if (lectures.size < 10) {
             log.warn { "Lectures with IDs 1 to 15 not found. Found only ${lectures.size}. Skipping insertion." }
             return
         }
 
-        val lectureCarts = lectures.mapIndexed { index, lecture -> //lecture 1~15 까지만 담
+        val lectureCarts = lectures.mapIndexed { index, lecture -> //lecture 1~10 까지만 담
             LectureCart(
                 user = user,
                 priority = index + 1,
