@@ -36,10 +36,6 @@ class SecurityConfig(
                 it
                     .requestMatchers("/auth/**",
                         "/h2-console/**",
-                        "/swagger-ui/**",
-                        "/swagger-ui.html",
-                        "/v3/api-docs/**",
-                        "timetable/**"
                     ).permitAll()
                   //  .requestMatchers("/actuator/health", "/actuator/info").permitAll() // for health check
                     .anyRequest().authenticated()

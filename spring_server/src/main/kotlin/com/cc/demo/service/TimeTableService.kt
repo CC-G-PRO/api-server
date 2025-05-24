@@ -1,5 +1,6 @@
 package com.cc.demo.service
 
+import TimeTableFilter
 import com.cc.demo.entity.Lecture
 import com.cc.demo.entity.TimeTable
 import com.cc.demo.entity.TimeTableLecture
@@ -14,7 +15,9 @@ import com.cc.demo.request.TimeTableUpdateRequest
 import com.cc.demo.response.TimetableResponse
 import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
+import java.time.Duration
 import java.time.LocalDateTime
+import java.time.LocalTime
 
 @Service
 class TimeTableService(
@@ -172,7 +175,6 @@ class TimeTableService(
         userId : Long,
         timeTableId : Long,
     ) : TimetableResponse {
-        //is exist time table and belong to user?
         val user = userRepository.findById(userId)
 
         val timetable = timetableRepository.findById(timeTableId)
@@ -180,14 +182,101 @@ class TimeTableService(
         if (timetable.user.id != userId) {
             throw IllegalArgumentException("해당 시간표가 존재하지 않습니다")
         }
+        //timetable type 수정
+        if( timetable.type != TimeTableType.CUSTOM ) {
+            timetable.type = TimeTableType.CUSTOM
+        }
 
-        //time table type 수정
-        if(timetable.type == )
+        val lectures: List<TimeTableLecture> = content.lectures?.map { it ->
+            //all timetable lecture item will be flushed
+            timetableLectureRepository.deleteByTimetableId(timetable.id)
 
+            val ttl = TimeTableLecture(
+                timetable = timetable,
+                lecture = lectureRepository.findById(it).
+                    orElseThrow { IllegalArgumentException("해당 강의가 존재하지 않습니다.") }
+            )
 
+            timetableLectureRepository.save(ttl)
+
+        } ?: emptyList()
+
+        return TimetableResponse.from(timetable, lectures)
     }
 
+    fun filterTimeTable(filter : TimeTableFilter, timetables: List<TimetableResponse>) : List<TimetableResponse> {
+        return timetables.filter { timetable ->
+            val courses = timetable.courses
 
+            // 포함 과목 체크
+            if (filter.includeSubjects.isNotEmpty() &&
+                courses.none { filter.includeSubjects.contains(it.courseName) }
+            ) return@filter false
+
+            // 제외 과목 체크
+            if (filter.excludeSubjects.isNotEmpty() &&
+                courses.any { filter.excludeSubjects.contains(it.courseName) }
+            ) return@filter false
+
+            // 포함 교수 체크
+            if (filter.includeProfessors.isNotEmpty() &&
+                courses.none { filter.includeProfessors.contains(it.professorName) }
+            ) return@filter false
+
+            // 제외 교수 체크
+            if (filter.excludeProfessors.isNotEmpty() &&
+                courses.any { filter.excludeProfessors.contains(it.professorName) }
+            ) return@filter false
+
+            // 허용 요일 필터
+            if (filter.allowedDays.isNotEmpty()) {
+                val daysInTimetable = courses.flatMap { it.time }.map { it.day }.distinct()
+                if (daysInTimetable.any { it !in filter.allowedDays }) {
+                    return@filter false
+                }
+            }
+
+            // 요일별 최대 수업 수 필터
+            if (filter.maxClassesPerDay != null) {
+                val dayCounts = mutableMapOf<String, Int>()
+                courses.flatMap { it.time }.forEach {
+                    dayCounts[it.day] = dayCounts.getOrDefault(it.day, 0) + 1
+                }
+                if (dayCounts.any { it.value > filter.maxClassesPerDay }) {
+                    return@filter false
+                }
+            }
+
+            // excludeBeforeMinutes 필터 (예: 오전 9시 + n분 이전 수업이 있으면 제외)
+            if (filter.excludeBeforeMinutes != null) {
+                val thresholdTime = LocalTime.of(9, 0).plusMinutes(filter.excludeBeforeMinutes.toLong())
+                val hasTooEarlyLecture = courses.flatMap { it.time }.any {
+                    LocalTime.parse(it.startTime) < thresholdTime
+                }
+                if (hasTooEarlyLecture) return@filter false
+            }
+
+            // 공강 시간 필터
+            if (filter.minFreeHours != null) {
+                val lecturesByDay = courses.flatMap { it.time }.groupBy { it.day }
+
+                for ((_, lectures) in lecturesByDay) {
+                    val sorted = lectures.sortedBy { LocalTime.parse(it.startTime) }
+
+                    for (i in 0 until sorted.size - 1) {
+                        val end = LocalTime.parse(sorted[i].endTime)
+                        val nextStart = LocalTime.parse(sorted[i + 1].startTime)
+                        val gap = Duration.between(end, nextStart).toMinutes()
+                        if (gap in 1 until filter.minFreeHours * 60) {
+                            return@filter false
+                        }
+                    }
+                }
+            }
+            true
+        }
+
+    }
 
     fun getTimeTables(userId: Long, type : TimeTableType): List<TimetableResponse> {
         val timetables = timetableRepository.findByUserId(userId)
@@ -208,9 +297,4 @@ class TimeTableService(
         return TimetableResponse.from(timetable, lectures)
     }
 
-    //생성된 Get timetable
-    //post 요청
-//    fun searchTimeTable(prompt: List<String>): List<Lecture> {
-//
-//    }
 }

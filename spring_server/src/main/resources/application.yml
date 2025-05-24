@@ -13,3 +13,7 @@ jwt:
   secret: ${JWT_SECRET_KEY:FA5hihaye!!stthSusLriITsngAndLonKeyT!gSt64se12sptHaecreteaersAtStroorHSmUBAlgo}
   expiration: ${JWT_EXPIRATION:2592000000}
     # expiration 30 days
+
+openai:
+  model: gpt-4o-mini
+  secret-key: ${OPENAI_SECRET_KEY}
