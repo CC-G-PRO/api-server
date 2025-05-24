@@ -27,7 +27,10 @@ data class TimetableResponse(
                         time = recommendedLecture.lecture.times.map { LectureTimeResponse.from(it) },
                         professorName = recommendedLecture.lecture.professorName,
                         lecturePlace = recommendedLecture.lecture.lecturePlace,
-                        syllabusUrl = recommendedLecture.lecture.syllabusUrl
+                        credit = recommendedLecture.lecture.subject.credit,
+                        syllabusUrl = recommendedLecture.lecture.syllabusUrl,
+                        subjectCode = recommendedLecture.lecture.subject.subjectCode,
+                        isEnglish =  recommendedLecture.lecture.isEnglish,
                     )
                 },
                 totalCredit = lectures.sumOf { it.lecture.subject.credit }
@@ -40,6 +43,15 @@ data class TimetableResponse(
 data class TimeTableCourseResponse(
     @JsonProperty("lecture_id")
     val lectureId: String,
+
+    @JsonProperty("subject_code")
+    val subjectCode : String,
+
+    @JsonProperty("credit")
+    val credit: Int,
+
+    @JsonProperty("is_english")
+    val isEnglish: Boolean,
 
     @JsonProperty("course_name")
     val courseName: String,
@@ -60,3 +72,4 @@ data class RecommendedTimetableResponse(
     @JsonProperty("filtered_timetables")
     val filteredTimetables: List<TimetableResponse>
 )
+

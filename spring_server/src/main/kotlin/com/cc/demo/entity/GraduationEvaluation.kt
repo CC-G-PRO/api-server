@@ -31,14 +31,18 @@ data class GraduationEvaluation(
     val generalRequiredCreditsEarned: Int,
     val generalRequiredCreditsRequired: Int,
 
-    val majorBasicCreditsEarned: Int,
+    val majorBasicCreditsEarned: Int, //전공 기초
     val majorBasicCreditsRequired: Int,
 
-    val majorRequiredCreditsEarned: Int,
+    val majorRequiredCreditsEarned: Int, //전공 필수
     val majorRequiredCreditsRequired: Int,
 
-    val majorElectiveCreditsEarned: Int,
+    val majorElectiveCreditsEarned: Int, //전공 선택
     val majorElectiveCreditsRequired: Int,
+
+    val majorIndustryCreditsEarned: Int = 0, //산학 필수
+    val majorIndustryCreditsRequired: Int = 0,
+
 
     val hasGraduationThesis: Boolean,
     val englishCourseCount: Int,

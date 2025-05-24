@@ -1,6 +1,7 @@
 package com.cc.demo.service
 
 import com.cc.demo.converter.GraduationEvaluationConverter
+import com.cc.demo.entity.GraduationEvaluation
 import com.cc.demo.repository.GraduationEvaluationRepository
 import com.cc.demo.repository.UserRepository
 import com.cc.demo.repository.UserTakenSubjectRepository
@@ -73,11 +74,19 @@ class PdfParsingService (
 
         return ReportUploadResponse(
             message = "success to parsing data",
-            reportId = graduationEvaluation.id,
-            data = fastApiResponse
+            data = graduationEvaluation
         )
     }
 
+    fun getGraduationInfo(userId: Long): ReportUploadResponse {
+        val data = graduationEvaluationRepository.findByUserId(userId)
+            .firstOrNull() ?: throw NoSuchElementException("No graduation evaluation found for userId=$userId")
+
+        return ReportUploadResponse(
+            message = "success to parsing data",
+            data = data
+        )
+    }
 
     fun validatePdf(fileInputStream: InputStream, charset: Charset = Charset.forName("euc-kr")): Boolean {
         val validStartRegex = Regex("^[es#@*0-9\$G%]")

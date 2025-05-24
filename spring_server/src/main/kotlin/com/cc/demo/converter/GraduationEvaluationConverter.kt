@@ -42,13 +42,18 @@ class GraduationEvaluationConverter {
                 majorRequiredCreditsEarned = reportData.majorInfo.majorRequired.earned,
                 majorRequiredCreditsRequired = reportData.majorInfo.majorRequired.required,
 
-                majorElectiveCreditsEarned = reportData.majorInfo.majorRequiredPlusElective.earned - reportData.majorInfo.majorRequired.earned,
-                majorElectiveCreditsRequired = reportData.majorInfo.majorRequiredPlusElective.required - reportData.majorInfo.majorRequired.required,
+                majorElectiveCreditsEarned = reportData.majorInfo.majorRequiredPlusElective.earned,
+                majorElectiveCreditsRequired = reportData.majorInfo.majorRequiredPlusElective.required,
+
+                majorIndustryCreditsEarned = reportData.majorInfo.majorIndustryRequired.earned,
+                majorIndustryCreditsRequired =  reportData.majorInfo.majorIndustryRequired.required,
 
                 hasGraduationThesis = graduationInfo.paper.earned > 0,
                 englishCourseCount = graduationInfo.english.earned,
                 englishCourseRequired = graduationInfo.english.required
             )
         }
+
+
     }
 }

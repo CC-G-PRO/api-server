@@ -12,4 +12,5 @@ interface GraduationEvaluationRepository : JpaRepository<GraduationEvaluation, L
     @Query("DELETE FROM GraduationEvaluation g WHERE g.user.id = :userId")
     fun deleteByUserId(@Param("userId") userId: Long)
 
+    fun findByUserId(@Param("userId") userId: Long): List<GraduationEvaluation>
 }
