@@ -2,6 +2,7 @@ package com.cc.demo.enumerate
 
 import kotlin.text.contains
 
+//그냥 맵핑요으로 사용함.
 enum class SubjectCode(val code: String, val description: String) {
     MAJOR_BASIC("11", "전공 기초 과목"),
     MAJOR_REQUIRED("04", "전공 필수 과목"),
