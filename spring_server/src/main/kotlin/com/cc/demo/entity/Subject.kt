@@ -11,22 +11,18 @@ data class Subject(
     @Column(name = "subject_code", unique = true)
     val subjectCode: String,
 
-    @Column(name = "subject_name")
-    val subjectName: String,
     val credit: Int,
-    val targetGrade: String,
-    val typeNumber : Int,
-    @Column(name="subject_year")
-    val year: Int,
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_main_id")
-    val categoryMain: CategoryMain,
+    @Column(name = "target_grade")
+    val targetGrade: String,
+
+    @Column(name = "type_number")
+    val typeNumber : Int, //이수구분
+
+    @Column(name = "ai_description")
+    var aiDescription: String?,
 
     @OneToMany(mappedBy = "subject")
-    val lectures: List<Lecture> = listOf(),
+    val lectures: List<Lecture> = listOf()
 
-
-    @OneToMany(mappedBy = "subject", cascade = [CascadeType.ALL])
-    val breadthGeneralEducationList: List<BreadthGeneralEducation> = listOf()
-)
+    )

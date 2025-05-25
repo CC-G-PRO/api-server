@@ -4,6 +4,8 @@ import com.cc.demo.enumerate.TimeTableType
 import com.cc.demo.request.TimeTableCreateRequest
 import com.cc.demo.request.TimeTableFileterRequest
 import com.cc.demo.request.TimeTableUpdateRequest
+import com.cc.demo.response.CommonResponse
+import com.cc.demo.response.GraduationEvaluationPreview
 import com.cc.demo.response.RecommendedTimetableResponse
 import com.cc.demo.response.TimetableResponse
 import com.cc.demo.service.NLPService
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+
 
 // TODO: 추후 JWT에서 사용자 ID 추출하도록 수정
 //TODO :  졸업 사정 진단표 기반으로 특정 시간표와 이수 후 졸업 사정 진단표 충족하는지 여부 조사. <- 이거 어떻게 할건지도 한 번 알아봐야겟다.
@@ -49,7 +52,13 @@ class TimeTableController (
                 }
             )
 
-            ResponseEntity.ok(response)
+            ResponseEntity.ok(
+                CommonResponse(
+                    message = "Success to generate timetable",
+                    valid =  true,
+                    data = response
+                )
+            )
 
         } catch (e: Exception) {
             ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -58,7 +67,7 @@ class TimeTableController (
     }
 
     @PostMapping("/random")
-    fun filterTimetables(
+    fun filter(
         @RequestBody req: TimeTableFileterRequest
     ): ResponseEntity<Any> {
         return try {
@@ -71,7 +80,13 @@ class TimeTableController (
             val allTimetables = timeTableService.getTimeTables(userId, type = TimeTableType.GENERATED)
             val filteredTimetables = timeTableService.filterTimeTable(filter, allTimetables)
 
-            ResponseEntity.ok(filteredTimetables)
+            ResponseEntity.ok(
+                CommonResponse(
+                    message = "Successfully filtered timetables",
+                    valid = true,
+                    data = filteredTimetables
+                )
+            )
         } catch (e: Exception) {
             e.printStackTrace()
             ResponseEntity.status(500).body(mapOf("error" to (e.message ?: "Internal Server Error")))
@@ -82,7 +97,7 @@ class TimeTableController (
 
     //type 지정으로 무작위 생성인지 , 사용자가 커스텀한 건지 구분해서 가져올 수 있음.
     @GetMapping("/")
-    fun getRecommendedTimetable(
+    fun getList(
         @RequestParam(name = "type", required = true) type : TimeTableType,
     ): ResponseEntity<Any> {
         val userId: Long = 1
@@ -94,21 +109,33 @@ class TimeTableController (
             }
 
             val response = RecommendedTimetableResponse(filteredTimetables = results)
-            ResponseEntity.ok(response)
+            ResponseEntity.ok(
+                CommonResponse(
+                    message = "Success to get a list of timetables",
+                    valid = true,
+                    data = response
+                )
+            )
         } catch (e: Exception) {
             ResponseEntity.status(500).body("서버 오류가 발생했습니다: ${e.message}")
         }
     }
 
     @PostMapping("/")
-    fun createTimeTable(
+    fun create(
         @RequestBody req: TimeTableCreateRequest,
         ): ResponseEntity<Any> {
         val userId: Long = 1
 
         return try{
             val result : TimetableResponse = timeTableService.createTimeTables(req, userId)
-            ResponseEntity.ok(result)
+            ResponseEntity.ok(
+                CommonResponse(
+                    message = "Success to post new timetable",
+                    valid = true,
+                    data = result
+                )
+            )
         }
         catch (e: Exception){
             ResponseEntity.status(500).body(e.message) //response 부분 status code 정밀하게 해야함.
@@ -117,12 +144,24 @@ class TimeTableController (
 
     //특정 id 의 timetable 가져옴.
     @GetMapping("/{id}")
-    fun getTimeTable(@PathVariable id: Long): ResponseEntity<Any> {
+    fun get(@PathVariable id: Long): ResponseEntity<Any> {
         val userId: Long = 1
 
         return try {
-            val result: TimetableResponse = timeTableService.getTimetableDetails(id)
-            ResponseEntity.ok(result)
+            val timeTable: TimetableResponse = timeTableService.getTimetableDetails(userId,id)
+            val gradInfo : GraduationEvaluationPreview = timeTableService.graduationInfoWithTimeTable(userId, timeTable)
+
+            val data = {
+                "timetable" to timeTable
+                "graduation_info" to gradInfo
+            }
+            ResponseEntity.ok(
+                CommonResponse(
+                    message = "Success to Get data",
+                    valid = true,
+                    data = data,
+                )
+            )
         } catch (e: Exception) {
             ResponseEntity.status(500).body(e.message)
         }
@@ -130,13 +169,17 @@ class TimeTableController (
 
     //저장이 필요한 경우에는 단순히 id 값만 넘기면 되는 로직임.
     @PutMapping("/{id}")
-    fun putTimeTable(@PathVariable id: Long, @RequestBody request: TimeTableUpdateRequest): ResponseEntity<Any> {
+    fun put(@PathVariable id: Long, @RequestBody request: TimeTableUpdateRequest): ResponseEntity<Any> {
 
         return try {
             val userId : Long = 1
             val res : TimetableResponse =  timeTableService.updateTimeTable(content = request, userId = userId, timeTableId = id)
 
-            ResponseEntity.ok(res)
+            ResponseEntity.ok(CommonResponse(
+                message = "Success to put data",
+                valid = true,
+                data = res
+            ))
 
         } catch (e: IllegalArgumentException) {
             ResponseEntity.status(404).body(mapOf("error" to e.message))
@@ -147,10 +190,13 @@ class TimeTableController (
 
 
     @DeleteMapping("/{id}")
-    fun deleteTimeTable(@PathVariable id: Long): ResponseEntity<Any> {
+    fun delete(@PathVariable id: Long): ResponseEntity<Any> {
         return try {
             timeTableService.deleteTimetable(id)
-            ResponseEntity.ok(mapOf("message" to "시간표가 성공적으로 삭제되었습니다. id=$id"))
+            ResponseEntity.ok(CommonResponse(
+                message = "Success to delete",
+                valid = false
+            ))
         } catch (e: IllegalArgumentException) {
             ResponseEntity.status(404).body(mapOf("error" to e.message))
         } catch (e: Exception) {

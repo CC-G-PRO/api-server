@@ -1,16 +1,13 @@
 package com.cc.demo.response
 
+import com.cc.demo.entity.GraduationEvaluation
 import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 
 data class ReportUploadResponse(
     val message: String,
-
-    @JsonProperty("report_id")
-    val reportId: Long,
-
-    val data: ReportData
+    val data: GraduationEvaluation
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)

@@ -36,7 +36,7 @@ class SecurityConfig(
                 it
                     .requestMatchers("/auth/**",
                         "/h2-console/**",
-                    ).permitAll()
+                        ).permitAll()
                   //  .requestMatchers("/actuator/health", "/actuator/info").permitAll() // for health check
                     .anyRequest().authenticated()
             }

@@ -1,17 +1,24 @@
 package com.cc.demo.service
 
 import TimeTableFilter
+import com.cc.demo.entity.GraduationEvaluation
 import com.cc.demo.entity.Lecture
 import com.cc.demo.entity.TimeTable
 import com.cc.demo.entity.TimeTableLecture
+import com.cc.demo.enumerate.IndustryCode
+import com.cc.demo.enumerate.SubjectCode
 import com.cc.demo.enumerate.TimeTableType
+import com.cc.demo.repository.GraduationEvaluationRepository
 import com.cc.demo.repository.LectureCartRepository
 import com.cc.demo.repository.LectureRepository
 import com.cc.demo.repository.TimetableLectureRepository
 import com.cc.demo.repository.TimetableRepository
 import com.cc.demo.repository.UserRepository
+import com.cc.demo.repository.UserTakenSubjectRepository
 import com.cc.demo.request.TimeTableCreateRequest
 import com.cc.demo.request.TimeTableUpdateRequest
+import com.cc.demo.response.GraduationEvaluationPreview
+import com.cc.demo.response.GraduationInfo
 import com.cc.demo.response.TimetableResponse
 import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
@@ -26,7 +33,10 @@ class TimeTableService(
     val timetableRepository: TimetableRepository,
     val timetableLectureRepository: TimetableLectureRepository,
     private val lectureService: LectureService,
-    private val lectureRepository: LectureRepository
+    private val lectureRepository: LectureRepository,
+    private val pdfParsingService: PdfParsingService,
+    private val graduationEvaluationRepository: GraduationEvaluationRepository,
+    private val userTakenSubjectRepository: UserTakenSubjectRepository
 ) {
 
     @Transactional
@@ -278,6 +288,80 @@ class TimeTableService(
 
     }
 
+    //time table with graduation 아 재수강은 좀 ...
+    fun graduationInfoWithTimeTable(userId: Long, tableDetail : TimetableResponse): GraduationEvaluationPreview {
+
+        val currentInfo = graduationEvaluationRepository.findByUserId(userId).firstOrNull()
+            ?: throw RuntimeException("졸업 평가 정보가 존재하지 않습니다.")
+
+        val alreadyTakenSubjects = userTakenSubjectRepository.findByUserId(userId).map { it.subjectName }.toSet()
+        val newCourses = tableDetail.courses.filter { it.courseName !in alreadyTakenSubjects } //재수강 과목은 할당하지 않음.
+
+        var updated = currentInfo.copy(
+            totalCreditsEarned = currentInfo.totalCreditsEarned,
+            generalFreeCreditsEarned = currentInfo.generalFreeCreditsEarned,
+            generalBreadthCreditsEarned = currentInfo.generalBreadthCreditsEarned,
+            generalRequiredCreditsEarned = currentInfo.generalRequiredCreditsEarned,
+            majorBasicCreditsEarned = currentInfo.majorBasicCreditsEarned,
+            majorRequiredCreditsEarned = currentInfo.majorRequiredCreditsEarned,
+            majorElectiveCreditsEarned = currentInfo.majorElectiveCreditsEarned,
+            majorIndustryCreditsEarned = currentInfo.majorRequiredCreditsEarned,
+
+            englishCourseCount = currentInfo.englishCourseCount,
+        )
+
+        for (course in newCourses) {
+            val credit = course.credit
+            val subjectCode = SubjectCode.fromCode(course.subjectCode)
+            val isEnglish = course.isEnglish
+
+            when (subjectCode) {
+                SubjectCode.GENERAL_FREE -> {
+                    updated = updated.copy(generalFreeCreditsEarned = updated.generalFreeCreditsEarned + credit)
+                }
+
+                SubjectCode.GENERAL_DISTRIBUTED -> {
+                    updated = updated.copy(generalBreadthCreditsEarned = (updated.generalBreadthCreditsEarned ?: 0) + credit)
+                }
+
+                SubjectCode.GENERAL_REQUIRED -> {
+                    updated = updated.copy(generalRequiredCreditsEarned = updated.generalRequiredCreditsEarned + credit)
+                }
+
+                SubjectCode.MAJOR_BASIC -> {
+                    updated = updated.copy(majorBasicCreditsEarned = updated.majorBasicCreditsEarned + credit)
+                }
+
+                SubjectCode.MAJOR_REQUIRED -> {
+                    updated = updated.copy(majorRequiredCreditsEarned = updated.majorRequiredCreditsEarned + credit)
+                }
+
+                SubjectCode.MAJOR_ELECTIVE -> {
+                    updated = updated.copy(majorElectiveCreditsEarned = updated.majorElectiveCreditsEarned + credit)
+                }
+
+                else -> {
+                    //pass
+                }
+            }
+
+            if (IndustryCode.fromSubjectName(course.courseName) != null) { //산학 필수인지 체크하는 코드임.
+                updated = updated.copy(majorIndustryCreditsEarned = updated.majorIndustryCreditsEarned + credit)
+            }
+
+            if (isEnglish) {
+                updated = updated.copy(englishCourseCount = updated.englishCourseCount + 1)
+            }
+
+            updated = updated.copy(totalCreditsEarned = updated.totalCreditsEarned + credit)
+        }
+
+        return GraduationEvaluationPreview(
+            original = currentInfo,
+            expected = updated
+        )
+    }
+
     fun getTimeTables(userId: Long, type : TimeTableType): List<TimetableResponse> {
         val timetables = timetableRepository.findByUserId(userId)
             .filter { it.type == type }
@@ -285,10 +369,12 @@ class TimeTableService(
         return timetables.map { buildTimetableResponse(it) }
     }
 
-    fun getTimetableDetails(tableId: Long): TimetableResponse {
+    fun getTimetableDetails(userId: Long, tableId: Long): TimetableResponse {
         val timetable = timetableRepository.findById(tableId)
             .orElseThrow { IllegalArgumentException("해당 시간표가 존재하지 않습니다. id=$tableId") }
-
+        if (timetable.user.id != userId){
+            throw IllegalArgumentException("잘못된 접근입니다. id=$tableId")
+        }
         return buildTimetableResponse(timetable)
     }
 
@@ -296,5 +382,6 @@ class TimeTableService(
         val lectures = timetableLectureRepository.findByTimetableId(timetable.id)
         return TimetableResponse.from(timetable, lectures)
     }
+
 
 }

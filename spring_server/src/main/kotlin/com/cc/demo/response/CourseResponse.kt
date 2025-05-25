@@ -37,7 +37,7 @@ data class CourseResponse(
                 note = lecture.note,
                 language = lecture.language,
                 aiDescription = lecture.aiDescription,
-                lectureCode = lecture.lectureCode,
+                lectureCode = lecture.divisionCode,
                 subjectName = lecture.subject.subjectName,
             )
         }
