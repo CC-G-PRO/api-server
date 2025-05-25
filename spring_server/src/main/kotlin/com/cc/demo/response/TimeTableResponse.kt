@@ -2,6 +2,7 @@ package com.cc.demo.response
 
 import com.cc.demo.entity.TimeTable
 import com.cc.demo.entity.TimeTableLecture
+import com.cc.demo.enumerate.Category
 import com.fasterxml.jackson.annotation.JsonProperty
 
 data class TimetableResponse(
@@ -31,6 +32,8 @@ data class TimetableResponse(
                         syllabusUrl = recommendedLecture.lecture.syllabusUrl,
                         subjectCode = recommendedLecture.lecture.subject.subjectCode,
                         isEnglish =  recommendedLecture.lecture.isEnglish,
+                        category = recommendedLecture.lecture.subject.category,
+                        subjectId = recommendedLecture.lecture.subject.id.toString(),
                     )
                 },
                 totalCredit = lectures.sumOf { it.lecture.subject.credit }
@@ -43,6 +46,11 @@ data class TimetableResponse(
 data class TimeTableCourseResponse(
     @JsonProperty("lecture_id")
     val lectureId: String,
+
+    @JsonProperty("subject_id")
+    val subjectId: String,
+    @JsonProperty("category")
+    val category: Category,
 
     @JsonProperty("subject_code")
     val subjectCode : String,

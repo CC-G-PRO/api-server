@@ -19,15 +19,15 @@ class Curriculum (
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long = 0,
 
-    @Column(name = "entry_year")
-    val entryYear : Int = 0,
+    @Column(name = "entry_year", nullable = false)
+    val entryYear : Int,
 
     @Enumerated(EnumType.STRING)
     @Column(name = "major_category")
     val majorCategory : MajorCategory,
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "subject_id")
+    @JoinColumn(name = "subject_id", nullable = true)
     val subject: Subject? = null
 
 )

@@ -1,7 +1,6 @@
 package com.cc.demo.response
 
 import com.cc.demo.entity.GraduationEvaluation
-import com.fasterxml.jackson.annotation.JsonFormat
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 
@@ -44,7 +43,10 @@ data class BasicInfo(
     val enrollSemester: Int,
 
     @JsonProperty("evaluation_date")
-    val evaluationDate: String
+    val evaluationDate: String,
+
+    @JsonProperty("curriculum_year")
+    val curriculumYear: Int,
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)

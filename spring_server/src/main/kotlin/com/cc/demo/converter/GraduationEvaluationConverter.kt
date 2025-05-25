@@ -17,7 +17,7 @@ class GraduationEvaluationConverter {
 
             return GraduationEvaluation(
                 user = user,
-                studentNumber = basicInfo.studentNumber,
+                entryYear = basicInfo.curriculumYear,
                 studentName = basicInfo.studentName,
                 department = basicInfo.department,
                 leftSemester = basicInfo.enrollSemester,
@@ -50,7 +50,8 @@ class GraduationEvaluationConverter {
 
                 hasGraduationThesis = graduationInfo.paper.earned > 0,
                 englishCourseCount = graduationInfo.english.earned,
-                englishCourseRequired = graduationInfo.english.required
+                englishCourseRequired = graduationInfo.english.required,
+                studentNumber = reportData.basicInfo.studentNumber
             )
         }
 

@@ -1,5 +1,6 @@
 package com.cc.demo.entity
 
+import com.cc.demo.enumerate.Category
 import jakarta.persistence.*
 
 @Entity
@@ -22,7 +23,10 @@ data class Subject(
     @Column(name = "ai_description")
     var aiDescription: String?,
 
+    var category: Category,
+
+
     @OneToMany(mappedBy = "subject")
     val lectures: List<Lecture> = listOf()
 
-    )
+)

@@ -1,12 +1,12 @@
 package com.cc.demo.service
 
 import TimeTableFilter
-import com.cc.demo.entity.GraduationEvaluation
 import com.cc.demo.entity.Lecture
 import com.cc.demo.entity.TimeTable
 import com.cc.demo.entity.TimeTableLecture
+import com.cc.demo.enumerate.Category
 import com.cc.demo.enumerate.IndustryCode
-import com.cc.demo.enumerate.SubjectCode
+import com.cc.demo.enumerate.MajorCategory
 import com.cc.demo.enumerate.TimeTableType
 import com.cc.demo.repository.GraduationEvaluationRepository
 import com.cc.demo.repository.LectureCartRepository
@@ -18,7 +18,6 @@ import com.cc.demo.repository.UserTakenSubjectRepository
 import com.cc.demo.request.TimeTableCreateRequest
 import com.cc.demo.request.TimeTableUpdateRequest
 import com.cc.demo.response.GraduationEvaluationPreview
-import com.cc.demo.response.GraduationInfo
 import com.cc.demo.response.TimetableResponse
 import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
@@ -32,11 +31,10 @@ class TimeTableService(
     val userRepository: UserRepository,
     val timetableRepository: TimetableRepository,
     val timetableLectureRepository: TimetableLectureRepository,
-    private val lectureService: LectureService,
     private val lectureRepository: LectureRepository,
-    private val pdfParsingService: PdfParsingService,
     private val graduationEvaluationRepository: GraduationEvaluationRepository,
-    private val userTakenSubjectRepository: UserTakenSubjectRepository
+    private val userTakenSubjectRepository: UserTakenSubjectRepository,
+    private val curriculumService: CurriculumService
 ) {
 
     @Transactional
@@ -128,7 +126,7 @@ class TimeTableService(
                 val lecture = lectures[i]
 
                 if (path.any { isTimeOverlap(it, lecture) }) continue //겹치면 버리고
-                if (path.any { it.subject.subjectName == lecture.subject.subjectName }) continue //같은 과목일 경우 버림.
+                if (path.any { it.subjectName == lecture.subjectName }) continue //같은 과목일 경우 버림.
 
                 path.add(lecture)
                 backtrack(i + 1, path, totalCredit + lecture.subject.credit )
@@ -162,21 +160,24 @@ class TimeTableService(
 
         //create timetable
         val timetable = TimeTable(user = user , createdAt = LocalDateTime.now() )
+
         timetableRepository.save(timetable)
+        if(content.lectures != null){
+            val lectures: List<TimeTableLecture> = content.lectures.map { lectureId ->
+                val lecture = lectureRepository.findById(lectureId)
+                    .orElseThrow { IllegalArgumentException("해당 강의를 찾을 수 없습니다") }
 
-        val lectures: List<TimeTableLecture> = content.lectures.map { lectureId ->
-            val lecture = lectureRepository.findById(lectureId)
-                .orElseThrow { IllegalArgumentException("해당 강의를 찾을 수 없습니다") }
+                val ttl = TimeTableLecture(
+                    timetable = timetable,
+                    lecture = lecture
+                )
+                timetableLectureRepository.save(ttl)
 
-            val ttl = TimeTableLecture(
-                timetable = timetable,
-                lecture = lecture
-            )
-            timetableLectureRepository.save(ttl)
-
-            ttl
+                ttl
+            }
+            return TimetableResponse.from(timetable, lectures)
         }
-        return TimetableResponse.from(timetable, lectures)
+        return TimetableResponse.from(timetable,  emptyList())
     }
 
     @Transactional
@@ -294,8 +295,11 @@ class TimeTableService(
         val currentInfo = graduationEvaluationRepository.findByUserId(userId).firstOrNull()
             ?: throw RuntimeException("졸업 평가 정보가 존재하지 않습니다.")
 
+        //user 학번에 맞는 교육과정 표 가져오는 거임.
+
         val alreadyTakenSubjects = userTakenSubjectRepository.findByUserId(userId).map { it.subjectName }.toSet()
         val newCourses = tableDetail.courses.filter { it.courseName !in alreadyTakenSubjects } //재수강 과목은 할당하지 않음.
+        val majorCategory  = curriculumService.getMajorCategoryMapByEntryYear(currentInfo.entryYear)
 
         var updated = currentInfo.copy(
             totalCreditsEarned = currentInfo.totalCreditsEarned,
@@ -312,32 +316,41 @@ class TimeTableService(
 
         for (course in newCourses) {
             val credit = course.credit
-            val subjectCode = SubjectCode.fromCode(course.subjectCode)
+            val category : Category = course.category
             val isEnglish = course.isEnglish
 
-            when (subjectCode) {
-                SubjectCode.GENERAL_FREE -> {
+            when (category) {
+                Category.FREE_GENERAL -> {
                     updated = updated.copy(generalFreeCreditsEarned = updated.generalFreeCreditsEarned + credit)
                 }
 
-                SubjectCode.GENERAL_DISTRIBUTED -> {
+                Category.DISTRIBUTION_GENERAL -> {
                     updated = updated.copy(generalBreadthCreditsEarned = (updated.generalBreadthCreditsEarned ?: 0) + credit)
                 }
 
-                SubjectCode.GENERAL_REQUIRED -> {
+                Category.REQUIRED_GENERAL -> {
                     updated = updated.copy(generalRequiredCreditsEarned = updated.generalRequiredCreditsEarned + credit)
                 }
 
-                SubjectCode.MAJOR_BASIC -> {
-                    updated = updated.copy(majorBasicCreditsEarned = updated.majorBasicCreditsEarned + credit)
-                }
+                Category.MAJOR -> { //전공일 경우에 교육과정에 따라서 전공 필수인지 선택인지 기초인지 판단해야함.
+                    val subId = course.subjectId.toLong()
+                    if (majorCategory.containsKey(subId)) {
+                        when (majorCategory[subId]) {
+                            MajorCategory.MAJOR_BASIC -> {
+                                updated = updated.copy(majorBasicCreditsEarned = updated.majorBasicCreditsEarned + credit)
+                            }
+                            MajorCategory.MAJOR_REQUIRED -> {
+                                updated = updated.copy(majorRequiredCreditsEarned = updated.majorRequiredCreditsEarned + credit)
+                            }
 
-                SubjectCode.MAJOR_REQUIRED -> {
-                    updated = updated.copy(majorRequiredCreditsEarned = updated.majorRequiredCreditsEarned + credit)
-                }
-
-                SubjectCode.MAJOR_ELECTIVE -> {
-                    updated = updated.copy(majorElectiveCreditsEarned = updated.majorElectiveCreditsEarned + credit)
+                            MajorCategory.MAJOR_ELECTIVE -> {
+                                updated = updated.copy(majorElectiveCreditsEarned = updated.majorElectiveCreditsEarned + credit)
+                            }
+                            else -> {
+                                //예외.
+                            }
+                        }
+                    }
                 }
 
                 else -> {
