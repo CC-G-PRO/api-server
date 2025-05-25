@@ -11,11 +11,6 @@ enum class SubjectCode(val code: String, val description: String) {
     GENERAL_DISTRIBUTED("15", "배분이수 교양"),
     GENERAL_FREE("17", "자유이수 교양");
 
-    companion object {
-        private val codeMap = SubjectCode.entries.associateBy { it.code }
-
-        fun fromCode(code: String): SubjectCode? = codeMap[code]
-    }
 }
 
 enum class IndustryCode(val code: String) {

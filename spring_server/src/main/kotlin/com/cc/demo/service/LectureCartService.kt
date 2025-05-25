@@ -57,7 +57,7 @@ class  LectureCartService(
         return cartRepository.findAllByUser(user).map {
             CartItemResponse(
                 lecture_id = it.lecture.id,
-                course_name = it.lecture.subject.subjectName,
+                course_name = it.lecture.subjectName,
                 priority = it.priority
             )
         }

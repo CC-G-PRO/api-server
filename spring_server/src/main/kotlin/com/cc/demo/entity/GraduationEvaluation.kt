@@ -13,6 +13,8 @@ data class GraduationEvaluation(
     @JoinColumn(name = "user_id")
     val user: User,
 
+    val entryYear : Int,
+
     val studentNumber: String,
     val studentName: String,
     val department: String,

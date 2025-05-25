@@ -94,7 +94,6 @@ class TimeTableController (
     }
 
     //TODO : lectures 시간표 겹치는지 확인해주고 create, update 할 것.
-
     //type 지정으로 무작위 생성인지 , 사용자가 커스텀한 건지 구분해서 가져올 수 있음.
     @GetMapping("/")
     fun getList(
@@ -151,10 +150,10 @@ class TimeTableController (
             val timeTable: TimetableResponse = timeTableService.getTimetableDetails(userId,id)
             val gradInfo : GraduationEvaluationPreview = timeTableService.graduationInfoWithTimeTable(userId, timeTable)
 
-            val data = {
-                "timetable" to timeTable
+            val data = mapOf(
+                "timetable" to timeTable,
                 "graduation_info" to gradInfo
-            }
+            )
             ResponseEntity.ok(
                 CommonResponse(
                     message = "Success to Get data",
