@@ -38,7 +38,8 @@ class SecurityConfig(
                         "/h2-console/**",
                         ).permitAll()
                   //  .requestMatchers("/actuator/health", "/actuator/info").permitAll() // for health check
-                    .anyRequest().authenticated()
+                  //  .anyRequest().authenticated()   // 실제로 이거 써야함
+                    .anyRequest().permitAll() // 테스트용 (인증 불요)
             }
 
             .headers { it.frameOptions { it.sameOrigin() } }
