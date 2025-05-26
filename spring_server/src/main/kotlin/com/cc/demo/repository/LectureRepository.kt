@@ -1,28 +1,28 @@
 ﻿package com.cc.demo.repository
 
 import com.cc.demo.entity.Lecture
+import com.cc.demo.enumerate.Category
+import com.cc.demo.enumerate.MajorCategory
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 
 interface LectureRepository : JpaRepository<Lecture, Long> {
+    @Query("""
+        SELECT DISTINCT l FROM Curriculum c
+        JOIN c.subject s
+        JOIN s.lectures l
+        WHERE c.majorCategory = :majorCategory
+    """)
+    fun findMajorLectures(@Param("majorCategory") majorCategory: MajorCategory)
+        : List<Lecture>
 
-//    @Query("""
-//        SELECT DISTINCT l FROM Lecture l
-//        JOIN FETCH l.subject s
-//        JOIN FETCH s.categoryMain c
-//        JOIN FETCH l.times t
-//        WHERE c.name LIKE %:category%
-//    """)
-//    fun findMajorLectures(@Param("category") category: String): List<Lecture>
-//
-//    @Query("""
-//        SELECT DISTINCT l FROM Lecture l
-//        JOIN FETCH l.subject s
-//        JOIN FETCH s.categoryMain c
-//        JOIN s.breadthGeneralEducationList b
-//        JOIN FETCH l.times t
-//        WHERE b.type = :area
-//    """)
-//    fun findGeneralLectures(@Param("area") area: String): List<Lecture>
+
+    @Query("""
+        SELECT DISTINCT l FROM Lecture l
+        JOIN l.subject s
+        WHERE s.category = :category
+    """)
+    fun findGeneralLectures(@Param("category") category: Category)
+        : List<Lecture>
 }
