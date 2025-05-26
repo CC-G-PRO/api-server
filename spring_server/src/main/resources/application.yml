@@ -16,4 +16,4 @@ jwt:
 
 openai:
   model: gpt-4o-mini
-  secret-key: ${OPENAI_SECRET_KEY}
+  secret-key: ${OPENAI_SECRET_KEY:no_valuable_value} # 의미 없는 default 값 추가함

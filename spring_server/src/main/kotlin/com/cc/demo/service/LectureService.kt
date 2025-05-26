@@ -1,6 +1,7 @@
 package com.cc.demo.service
 
 import com.cc.demo.client.AiClient
+import com.cc.demo.enumerate.Category
 import com.cc.demo.repository.LectureRepository
 import com.cc.demo.repository.UserTakenSubjectRepository
 import com.cc.demo.request.CourseSearchRequest
@@ -26,20 +27,23 @@ class LectureService(
             codes
         } else emptyList()
 
-        val initialLectures = when (request.type) {
-            "전공" -> {
-                val category = request.category ?: ""
-                val majors = lectureRepository.findMajorLectures(category)
-                log.info { "🔍 전공 검색 결과: ${majors.size}개 (category='$category')" }
-                majors
+        val initialLectures = when (request.category) {
+            Category.MAJOR -> {
+                request.majorCategory?.let {
+                    val majors = lectureRepository.findMajorLectures(it)
+                    log.info { "🔍 전공 검색 결과: ${majors.size}개 (category='${request.category}')" }
+                    majors
+                }?: throw RuntimeException("전공 카테고리가 이상함")
             }
-            "교양" -> {
-                val area = request.area ?: throw IllegalArgumentException("교양 검색 시 area는 필수입니다")
-                val generals = lectureRepository.findGeneralLectures(area)
-                log.info { "🔍 교양 검색 결과: ${generals.size}개 (area='$area')" }
+
+            Category.FREE_GENERAL,
+            Category.REQUIRED_GENERAL,
+            Category.DISTRIBUTION_GENERAL-> {
+                val generals = lectureRepository.findGeneralLectures(request.category)
+                log.info { "🔍 교양 검색 결과: ${generals.size}개 category : ${request.category}')" }
                 generals
             }
-            else -> throw IllegalArgumentException("지원하지 않는 type입니다")
+            else -> throw IllegalArgumentException("지원하지 않는 category 입니다")
         }
 
         val filtered = if (excludeCodes.isEmpty()) {
