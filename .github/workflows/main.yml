@@ -26,7 +26,7 @@ jobs:
     - name: Build EC2 with Packer (create AMI)
       run: |
         packer init .
-        packer build -var "spring_profile=${{ secrets.SPRING_PROFILES_ACTIVE }}" -var "jwt_key=${{ secrets.JWT_SECRET_KEY }}" -var "openai_key=${{ secrets.OPENAI_SECRET_KEY }}" ./packer/ec2.pkr.hcl
+        packer build ~/packer/ec2.pkr.hcl
 
     - name: Update Launch Template with new AMI
       run: |
