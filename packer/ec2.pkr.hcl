@@ -1,0 +1,44 @@
+variable "spring_profile" {
+  type = string
+}
+
+source "amazon-ebs" "ec2" {
+  region           = "ap-northeast-2"
+  instance_type    = "t3.micro"
+  ssh_username     = "ec2-user"
+  ami_name         = "my-app-ami-{{timestamp}}"
+  iam_instance_profile = "secret-role"
+
+  source_ami_filter {
+    filters = {
+      name                = "amzn2-ami-hvm-*-x86_64-gp2"
+      root-device-type    = "ebs"
+      virtualization-type = "hvm"
+    }
+    most_recent = true
+    owners      = ["amazon"]
+  }
+
+    user_data_file = "${path.module}/user-data.sh"
+
+}
+
+build {
+  sources = ["source.amazon-ebs.ec2"]
+
+  provisioner "shell" {
+    inline = [
+      "sudo yum update -y",
+      "sudo yum install -y docker docker-compose",
+      "sudo service docker start",
+      "sudo usermod -a -G docker ec2-user",
+      "mkdir -p /home/ec2-user/app"
+    ]
+  }
+
+  provisioner "file" {
+    source      = "../docker-compose.yml"
+    destination = "/home/ec2-user/app/docker-compose.yml"
+  }
+
+}
