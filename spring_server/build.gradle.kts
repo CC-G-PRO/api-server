@@ -28,6 +28,7 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
+
     // jpa
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 
@@ -54,6 +55,11 @@ dependencies {
 
     //web client
     implementation("org.springframework.boot:spring-boot-starter-webflux")
+
+    implementation(platform("io.awspring.cloud:spring-cloud-aws-dependencies:3.0.1"))
+
+    //AWS Secrets Manager
+    implementation("io.awspring.cloud:spring-cloud-aws-starter-secrets-manager")
 
 }
 
