@@ -1,0 +1,49 @@
+name: Deploy to EC2 With docker compose
+
+on: 
+  push:
+    branches:
+      - main #main push 가 발생할 때 
+
+jobs:
+  deploy: 
+    runs-on: ubuntu-latest
+
+    steps:
+    - name : Checkout source
+      uses : actions/checkout@v3
+      
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v3
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ap-northeast-2
+
+    - name: Install jq
+      run: sudo apt-get install -y jq
+
+    - name: Build EC2 with Packer (create AMI)
+      run: |
+        packer init .
+        packer build -var "spring_profile=${{ secrets.SPRING_PROFILES_ACTIVE }}" -var "jwt_key=${{ secrets.JWT_SECRET_KEY }}" -var "openai_key=${{ secrets.OPENAI_SECRET_KEY }}" ./packer/ec2.pkr.hcl
+
+    - name: Update Launch Template with new AMI
+      run: |
+        AMI_ID=$(aws ec2 describe-images --owners self --query 'Images[*].{ID:ImageId,Time:CreationDate}' --output json | jq -r 'sort_by(.Time) | reverse | .[0].ID')
+        LATEST_VERSION=$(aws ec2 describe-launch-templates --launch-template-names my-launch-template --query "LaunchTemplates[0].LatestVersionNumber" --output text)
+        
+        aws ec2 create-launch-template-version \
+          --launch-template-name api-server-templete \
+          --source-version $LATEST_VERSION \
+          --version-description "Deploy from GitHub Actions" \
+          --launch-template-data "{\"ImageId\":\"$AMI_ID\"}"
+
+    - name: Update Auto Scaling Group to use latest Launch Template #rolling up 단계.
+      run: |
+        aws autoscaling start-instance-refresh \
+          --auto-scaling-group-name asg-api-server \
+          --strategy Rolling
+
+
+
