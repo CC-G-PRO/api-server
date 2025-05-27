@@ -4,13 +4,15 @@ services:
       context: ./spring_server
       dockerfile: Dockerfile.dev  #dev일 때 dev용 Dockerfile 사용
 
-    volumes:
-      - ./spring_server:/app  #prod 에서는 제거해야함.
     container_name: spring-app
     ports:
       - "8080:8080"
     environment:
-      SPRING_PROFILES_ACTIVE: dev
+      SPRING_PROFILES_ACTIVE: "${SPRING_PROFILES_ACTIVE}"
+      SPRING_DATASOURCE_URL: "${SPRING_DATASOURCE_URL}"
+      SPRING_DATASOURCE_USERNAME: "${SPRING_DATASOURCE_USERNAME}"
+      SPRING_DATASOURCE_PASSWORD: "${SPRING_DATASOURCE_PASSWORD}"
+      JWT_SECRET_KEY: "${JWT_SECRET_KEY}"
     networks:
       - backend
 
