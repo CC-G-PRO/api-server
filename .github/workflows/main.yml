@@ -60,7 +60,8 @@ jobs:
 
         NEW_DATA=$(echo "$OLD_DATA" | jq --arg AMI "$AMI_ID" '
           .ImageId = $AMI |
-          .IamInstanceProfile = { Name: "secret-role" }
+          .IamInstanceProfile = { Name: "secret-role" } |
+          .InstanceType = "t3.medium"
         ')
 
         # 임시 파일에 JSON 저장 (따옴표 및 줄바꿈 처리)
