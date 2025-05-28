@@ -17,6 +17,8 @@ source "amazon-ebs" "ec2" {
   subnet_id               = "subnet-09316defe683c840f"
   security_group_id       = "sg-016eabdf7d90e3a72"
 
+  communicator     = "session" 
+
   source_ami_filter {
     filters = {
       name                = "amzn2-ami-hvm-*-x86_64-gp2"
