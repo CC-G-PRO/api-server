@@ -27,31 +27,13 @@ jobs:
       with:
         version: 1.9.2
 
-    - name: Install dependencies
-      run: sudo apt-get update && sudo apt-get install -y jq openssh-client
-
-    - name: Save Bastion SSH key
-      run: |
-          echo "${{ secrets.BASTION_SSH_KEY }}" > bastion-key.pem
-          chmod 600 bastion-key.pem
-
-
-
     - name: Install jq
       run: sudo apt-get install -y jq
 
     - name: Build EC2 with Packer (create AMI)
-      env : 
-          BASTION_KEY_PATH: ./bastion-key.pem
-          BASTION_USER: ec2-user                  # bastion host 사용자명 (보통 ec2-user)
-          BASTION_HOST: 3.36.73.163 # bastion host 퍼블릭 IP 또는 도메인
-
       run: |
         packer init .
-        packer build -var "bastion_key_path=${BASTION_KEY_PATH}" \
-                     -var "bastion_user=${BASTION_USER}" \
-                     -var "bastion_host=${BASTION_HOST}" \
-                      ec2.pkr.hcl
+        packer build ec2.pkr.hcl
 
     - name: Update Launch Template with new AMI
       run: |
@@ -64,7 +46,12 @@ jobs:
           --version-description "Deploy from GitHub Actions" \
           --launch-template-data "{
               \"ImageId\":\"$AMI_ID\",
-              \"KeyName\": \"api-server\"
+              \"KeyName\": \"api-server\",
+              \"NetworkInterfaces\": [{
+                \"AssociatePublicIpAddress\": true,
+                \"DeviceIndex\": 0,
+                \"SubnetId\": \"subnet-09316defe683c840f\",
+                \"Groups\": [\"sg-016eabdf7d90e3a72\"]
           }"
 
     - name: Update Auto Scaling Group to use latest Launch Template #rolling up 단계.
