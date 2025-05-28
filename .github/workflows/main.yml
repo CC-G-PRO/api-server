@@ -27,10 +27,25 @@ jobs:
       with:
         version: 1.9.2
 
+    - name: Install dependencies
+      run: sudo apt-get update && sudo apt-get install -y jq openssh-client
+
+    - name: Save Bastion SSH key
+      run: |
+          echo "${{ secrets.BASTION_SSH_KEY }}" > bastion-key.pem
+          chmod 600 bastion-key.pem
+
+
+
     - name: Install jq
       run: sudo apt-get install -y jq
 
     - name: Build EC2 with Packer (create AMI)
+      env : 
+          BASTION_KEY_PATH: ./bastion-key.pem
+          BASTION_USER: ec2-user                  # bastion host 사용자명 (보통 ec2-user)
+          BASTION_HOST: 3.36.73.163 # bastion host 퍼블릭 IP 또는 도메인
+
       run: |
         packer init .
         packer build ec2.pkr.hcl
