@@ -46,7 +46,8 @@ jobs:
           --version-description "Deploy from GitHub Actions" \
           --launch-template-data "{
               \"ImageId\":\"$AMI_ID\",
-              \"KeyName\": \"api-server\",
+              \"KeyName\": \"spring-server\",
+              \"IamInstanceProfile\": { \"Name\": \"secret-role\" },
               \"NetworkInterfaces\": [{
                 \"AssociatePublicIpAddress\": false,
                 \"DeviceIndex\": 0,
