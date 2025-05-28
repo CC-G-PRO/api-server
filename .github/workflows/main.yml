@@ -60,12 +60,12 @@ jobs:
           --query "LaunchTemplateVersions[0].LaunchTemplateData" \
           --output json)
 
-        NEW_DATA=$(echo "$OLD_DATA" | jq --arg AMI "$AMI_ID" '
+        NEW_DATA=$(echo "$OLD_DATA" | jq --arg AMI "$AMI_ID" --arg USERDATA "$USER_DATA" '
           .ImageId = $AMI |
           .IamInstanceProfile = { Name: "secret-role" } |
           .InstanceType = "t3.medium" |
           .UserData = $USERDATA
-        ')
+          ')
 
         # 임시 파일에 JSON 저장 (따옴표 및 줄바꿈 처리)
         echo "$NEW_DATA" > new-template-data.json
