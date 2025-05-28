@@ -19,16 +19,15 @@ source "amazon-ebs" "ec2" {
 
   source_ami_filter {
     filters = {
-      name                = "amzn2-ami-hvm-*-x86_64-gp2"
+      name                = "ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"
       root-device-type    = "ebs"
       virtualization-type = "hvm"
     }
     most_recent = true
-    owners      = ["amazon"]
+    owners      = ["099720109477"]  
   }
-
+  ssh_username = "ubuntu"
   user_data = file("user-data.sh") 
-
 }
 
 build {
@@ -36,40 +35,39 @@ build {
 
 provisioner "shell" {
   inline = [
-    "sudo yum update -y",
-    "sudo yum install -y docker curl",
-    "sudo service docker start",
-    "sudo usermod -a -G docker ec2-user",
-    "mkdir -p /home/ec2-user/app",
+    "sudo apt-get update -y",
+    "sudo apt-get install -y docker.io curl",
 
-    # Docker Compose v2 설치
+    "sudo systemctl start docker",
+    "sudo usermod -aG docker ubuntu",
+    "mkdir -p /home/ubuntu/app",
+
     "mkdir -p ~/.docker/cli-plugins",
     "curl -SL https://github.com/docker/compose/releases/download/v2.27.1/docker-compose-linux-x86_64 -o ~/.docker/cli-plugins/docker-compose",
     "chmod +x ~/.docker/cli-plugins/docker-compose",
 
-    # Docker Compose 확인
     "docker compose version"
   ]
 }
 
   provisioner "file" {
     source      = "../docker-compose.yml"
-    destination = "/home/ec2-user/app/docker-compose.yml"
+    destination = "/home/ubuntu/app/docker-compose.yml"
   }
 
   provisioner "file" {
     source      = "../fastapi_server"
-    destination = "/home/ec2-user/app/fastapi-server"
+    destination = "/home/ubuntu/app/fastapi-server"
   }
 
   provisioner "file" {
     source      = "../spring_server"
-    destination = "/home/ec2-user/app/spring-server"
+    destination = "/home/ubuntu/app/spring-server"
   }
 
   provisioner "shell" {
     inline = [
-      "cd /home/ec2-user/app",
+      "cd /home/ubuntu/app",
       "sudo docker compose build"
     ]
   }
