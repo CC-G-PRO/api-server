@@ -26,8 +26,6 @@ source "amazon-ebs" "ec2" {
     most_recent = true
     owners      = ["137112412989"]
   }
-
-  user_data = file("user-data.sh")
 }
 
 build {
