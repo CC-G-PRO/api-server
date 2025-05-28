@@ -30,26 +30,24 @@ source "amazon-ebs" "ec2" {
   user_data = file("user-data.sh")
 }
 
-build {
-  sources = ["source.amazon-ebs.ec2"]
+provisioner "shell" {
+  inline = [
+    "sudo dnf update -y",
 
-  provisioner "shell" {
-    inline = [
-      "sudo dnf update -y",
-      "sudo dnf install -y ca-certificates curl dnf-plugins-core",
-      
-      "sudo mkdir -p /etc/yum.repos.d/",
-      "sudo curl -fsSL https://download.docker.com/linux/centos/docker-ce.repo -o /etc/yum.repos.d/docker-ce.repo",
-      
-      "sudo dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin",
-      "sudo systemctl enable docker",
-      "sudo systemctl start docker",
-      "sudo usermod -aG docker ec2-user",
-      "mkdir -p /home/ec2-user/app",
-      
-      "docker compose version"
-    ]
-  }
+    "sudo dnf swap -y curl-minimal curl",
+
+    "sudo dnf install -y ca-certificates dnf-plugins-core",
+    "sudo curl -fsSL https://download.docker.com/linux/centos/docker-ce.repo -o /etc/yum.repos.d/docker-ce.repo",
+    "sudo dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin",
+
+    "sudo systemctl enable docker",
+    "sudo systemctl start docker",
+
+    "sudo usermod -aG docker ec2-user",
+    "mkdir -p /home/ec2-user/app",
+    "docker compose version"
+  ]
+}
 
   provisioner "file" {
     source      = "../docker-compose.yml"
