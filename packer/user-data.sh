@@ -16,5 +16,5 @@ EOF
 
 # docker-compose 실행
 cd $APP_DIR
-docker compose down || true
-docker compose up -d
+docker-compose down || true
+docker-compose up -d
