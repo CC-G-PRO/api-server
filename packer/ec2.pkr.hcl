@@ -49,4 +49,21 @@ build {
     destination = "/home/ec2-user/app/docker-compose.yml"
   }
 
+  provisioner "file" {
+    source      = "../fastapi-server"
+    destination = "/home/ec2-user/app/fastapi-server"
+  }
+
+  provisioner "file" {
+    source      = "../spring-server"
+    destination = "/home/ec2-user/app/spring-server"
+  }
+
+  provisioner "shell" {
+    inline = [
+      "cd /home/ec2-user/app",
+      "docker-compose build"
+    ]
+  }
+
 }
