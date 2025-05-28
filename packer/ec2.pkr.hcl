@@ -9,7 +9,7 @@ packer {
 
 source "amazon-ebs" "ec2" {
   region                      = "ap-northeast-2"
-  instance_type               = "t2.micro"
+  instance_type               = "t3.medium"
   ssh_username                = "ec2-user"
   ami_name                    = "my-app-ami-{{timestamp}}"
   iam_instance_profile        = "secret-role"
