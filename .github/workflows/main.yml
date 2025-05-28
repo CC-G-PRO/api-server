@@ -49,7 +49,6 @@ jobs:
           \"ImageId\":\"$AMI_ID\",
           \"KeyName\": \"spring-server\",
           \"IamInstanceProfile\": { \"Name\": \"secret-role\" },
-          \"SubnetId\": \"subnet-09316defe683c840f\",
           \"SecurityGroupIds\": [\"sg-016eabdf7d90e3a72\"]
         }"
     
@@ -66,7 +65,7 @@ jobs:
           echo "Using Launch Template version: ${{ steps.update_lt.outputs.new_version }}"
           aws autoscaling update-auto-scaling-group \
             --auto-scaling-group-name asg-api-server \
-            --launch-template "LaunchTemplateName=api-server-templete,Version=$NEW_VERSION"
+            --launch-template "LaunchTemplateName=api-server-templete,Version=${{steps.update_lt.outputs.new_version}}"
 
     - name: Start instance refresh for ASG
       run: |
