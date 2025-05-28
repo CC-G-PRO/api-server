@@ -55,8 +55,22 @@ jobs:
                 \"Groups\": [\"sg-016eabdf7d90e3a72\"]
                 }]
           }"
+        
+        NEW_VERSION=$(aws ec2 describe-launch-template-versions \
+          --launch-template-name api-server-templete \
+          --query "LaunchTemplateVersions[?VersionDescription=='Deploy from GitHub Actions'].VersionNumber | [0]" \
+          --output text)
+        
+        echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
-    - name: Update Auto Scaling Group to use latest Launch Template #rolling up 단계.
+
+    - name: Update Auto Scaling Group to use latest Launch Template
+      run: |
+        aws autoscaling update-auto-scaling-group \
+          --auto-scaling-group-name asg-api-server \
+          --launch-template "LaunchTemplateName=api-server-templete,Version=${{ steps.update_lt.outputs.new_version }}"
+
+    - name: Start instance refresh for ASG
       run: |
         aws autoscaling start-instance-refresh \
           --auto-scaling-group-name asg-api-server \
