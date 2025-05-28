@@ -48,7 +48,10 @@ jobs:
 
       run: |
         packer init .
-        packer build ec2.pkr.hcl
+        packer build -var "bastion_key_path=${BASTION_KEY_PATH}" \
+                     -var "bastion_user=${BASTION_USER}" \
+                     -var "bastion_host=${BASTION_HOST}" \
+                      ec2.pkr.hcl
 
     - name: Update Launch Template with new AMI
       run: |
