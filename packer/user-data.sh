@@ -1,13 +1,25 @@
 #!/bin/bash
+exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
 
-sudo dnf update -y
-sudo dnf install -y awscli jq
+echo "===== Starting User Data Script ====="
 
+sudo yum update -y
+sudo yum install -y awscli jq docker
+
+sudo systemctl start docker
+sudo systemctl enable docker
+sudo usermod -aG docker ec2-user
+
+AWS_REGION="ap-northeast-2"
 APP_DIR="/home/ec2-user/app"
 
-JWT_SECRET_KEY=$(aws secretsmanager get-secret-value --secret-id prod/api/jwt --query SecretString --output text)
-OPENAI_SECRET_KEY=$(aws secretsmanager get-secret-value --secret-id prod/api/openai --query SecretString --output text)
+OPENAI_SECRET_JSON=$(aws --region $AWS_REGION secretsmanager get-secret-value --secret-id prod/api/openai --query SecretString --output text)
+OPENAI_SECRET_KEY=$(echo "$OPENAI_SECRET_JSON" | jq -r '.OPENAI_SECRET_KEY')
 
+JWT_SECRET_JSON=$(aws --region $AWS_REGION secretsmanager get-secret-value --secret-id prod/api/jwt --query SecretString --output text)
+JWT_SECRET_KEY=$(echo "$JWT_SECRET_JSON" | jq -r '.JWT_SECRET_KEY')
+
+# .env 생성
 cat <<EOF > $APP_DIR/.env
 SPRING_PROFILES_ACTIVE=prod
 JWT_SECRET_KEY=$JWT_SECRET_KEY
@@ -20,3 +32,5 @@ chown ec2-user:ec2-user $APP_DIR/.env
 cd $APP_DIR
 docker compose down || true
 docker compose up -d
+
+echo "===== User Data Script Completed ====="
