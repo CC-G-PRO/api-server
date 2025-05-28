@@ -51,7 +51,7 @@ jobs:
         --launch-template-data "{
           \"ImageId\":\"$AMI_ID\",
           \"KeyName\": \"spring-server\",
-          \"IamInstanceProfile\": { \"Name\": \"secret-role\" },
+          \"IamInstanceProfile\": { \"Name\": \"secret-role\" }
         }"
     
         NEW_VERSION=$(aws ec2 describe-launch-template-versions \
