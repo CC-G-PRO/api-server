@@ -48,7 +48,7 @@ jobs:
               \"ImageId\":\"$AMI_ID\",
               \"KeyName\": \"api-server\",
               \"NetworkInterfaces\": [{
-                \"AssociatePublicIpAddress\": true,
+                \"AssociatePublicIpAddress\": false,
                 \"DeviceIndex\": 0,
                 \"SubnetId\": \"subnet-09316defe683c840f\",
                 \"Groups\": [\"sg-016eabdf7d90e3a72\"]
