@@ -20,6 +20,11 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ap-northeast-2
 
+    - name: Setup Packer
+      uses: hashicorp/setup-packer@v2
+      with:
+        version: 1.9.2
+
     - name: Install jq
       run: sudo apt-get install -y jq
 
