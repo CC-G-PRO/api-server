@@ -41,29 +41,41 @@ jobs:
     - name: Update Launch Template with new AMI
       id: update_lt
       run: |
-        AMI_ID=$(aws ec2 describe-images --owners self --query 'Images[*].{ID:ImageId,Time:CreationDate}' --output json | jq -r 'sort_by(.Time) | reverse | .[0].ID')
-        LATEST_VERSION=$(aws ec2 describe-launch-templates --launch-template-names api-server-templete --query "LaunchTemplates[0].LatestVersionNumber" --output text)
+        # 최신 생성된 AMI ID 가져오기
+        AMI_ID=$(aws ec2 describe-images --owners self \
+          --query 'Images[*].{ID:ImageId,Time:CreationDate}' \
+          --output json | jq -r 'sort_by(.Time) | reverse | .[0].ID')
 
+        # Launch Template의 최신 버전 번호 확인
+        LATEST_VERSION=$(aws ec2 describe-launch-templates \
+          --launch-template-names api-server-templete \
+          --query "LaunchTemplates[0].LatestVersionNumber" \
+          --output text)
+
+        # 기존 Launch Template 데이터 가져오기
         OLD_DATA=$(aws ec2 describe-launch-template-versions \
           --launch-template-name api-server-templete \
           --versions $LATEST_VERSION \
           --query "LaunchTemplateVersions[0].LaunchTemplateData" \
           --output json)
 
+        # 기존 데이터에서 AMI만 새로 바꾸기
         NEW_DATA=$(echo "$OLD_DATA" | jq --arg AMI "$AMI_ID" '.ImageId = $AMI')
 
-        aws ec2 create-launch-template-version \
+        # 임시 파일에 JSON 저장 (따옴표 및 줄바꿈 처리)
+        echo "$NEW_DATA" > new-template-data.json
+
+        # 새로운 Launch Template 버전 생성
+        NEW_VERSION=$(aws ec2 create-launch-template-version \
           --launch-template-name api-server-templete \
           --source-version $LATEST_VERSION \
           --version-description "Deploy from GitHub Actions" \
-          --launch-template-data "$NEW_DATA"
-
-        NEW_VERSION=$(aws ec2 describe-launch-template-versions \
-          --launch-template-name api-server-templete \
-          --query "LaunchTemplateVersions[?VersionDescription=='Deploy from GitHub Actions'].VersionNumber | [0]" \
+          --launch-template-data file://new-template-data.json \
+          --query 'LaunchTemplateVersion.VersionNumber' \
           --output text)
 
-        echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+        # GitHub Actions output 변수 등록
+        echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
 
 
     - name: Update Auto Scaling Group to use latest Launch Template
