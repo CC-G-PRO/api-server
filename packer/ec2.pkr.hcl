@@ -70,7 +70,7 @@ provisioner "shell" {
   provisioner "shell" {
     inline = [
       "cd /home/ec2-user/app",
-      "docker compose build"
+      "sudo docker compose build"
     ]
   }
 
