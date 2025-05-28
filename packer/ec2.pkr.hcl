@@ -1,8 +1,3 @@
-variable "bastion_key_path" {}
-variable "bastion_user" {}
-variable "bastion_host" {}
-
-
 packer {
   required_plugins {
     amazon = {
@@ -19,7 +14,7 @@ source "amazon-ebs" "ec2" {
   ami_name         = "my-app-ami-{{timestamp}}"
   iam_instance_profile = "secret-role"
   vpc_id                  = "vpc-021af12dd2d6f3ad4"
-  subnet_id               = "subnet-076fbfebb4cac7303"
+  subnet_id               = "subnet-076fbfebb4cac7303" //public subnet
 
   source_ami_filter {
     filters = {
