@@ -32,8 +32,8 @@ jobs:
 
     - name: Build EC2 with Packer (create AMI)
       run: |
-        packer init ./packer
-        packer build ./packer/ec2.pkr.hcl
+        packer init .
+        packer build ec2.pkr.hcl
 
     - name: Update Launch Template with new AMI
       run: |
