@@ -36,6 +36,8 @@ build {
   # Docker 및 Compose Plugin 설치
   provisioner "shell" {
     inline = [
+      "sudo rm -rf /var/lib/apt/lists/*",
+      "sudo apt-get clean",
       "sudo apt-get update -y",
       "sudo apt-get install -y ca-certificates curl gnupg",
 
