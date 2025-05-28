@@ -41,6 +41,8 @@ jobs:
     - name: Update Launch Template with new AMI
       id: update_lt
       run: |
+        USER_DATA=$(base64 -w 0 user-data.sh)
+        
         # 최신 생성된 AMI ID 가져오기
         AMI_ID=$(aws ec2 describe-images --owners self \
           --query 'Images[*].{ID:ImageId,Time:CreationDate}' \
@@ -61,7 +63,8 @@ jobs:
         NEW_DATA=$(echo "$OLD_DATA" | jq --arg AMI "$AMI_ID" '
           .ImageId = $AMI |
           .IamInstanceProfile = { Name: "secret-role" } |
-          .InstanceType = "t3.medium"
+          .InstanceType = "t3.medium" |
+          .UserData = $USERDATA
         ')
 
         # 임시 파일에 JSON 저장 (따옴표 및 줄바꿈 처리)
