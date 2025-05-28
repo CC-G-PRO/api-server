@@ -52,15 +52,16 @@ jobs:
           --query "LaunchTemplates[0].LatestVersionNumber" \
           --output text)
 
-        # 기존 Launch Template 데이터 가져오기
         OLD_DATA=$(aws ec2 describe-launch-template-versions \
           --launch-template-name api-server-templete \
           --versions $LATEST_VERSION \
           --query "LaunchTemplateVersions[0].LaunchTemplateData" \
           --output json)
 
-        # 기존 데이터에서 AMI만 새로 바꾸기
-        NEW_DATA=$(echo "$OLD_DATA" | jq --arg AMI "$AMI_ID" '.ImageId = $AMI')
+        NEW_DATA=$(echo "$OLD_DATA" | jq --arg AMI "$AMI_ID" '
+          .ImageId = $AMI |
+          .IamInstanceProfile = { Name: "secret-role" }
+        ')
 
         # 임시 파일에 JSON 저장 (따옴표 및 줄바꿈 처리)
         echo "$NEW_DATA" > new-template-data.json
