@@ -52,7 +52,6 @@ jobs:
           \"ImageId\":\"$AMI_ID\",
           \"KeyName\": \"spring-server\",
           \"IamInstanceProfile\": { \"Name\": \"secret-role\" },
-          \"SecurityGroupIds\": [\"sg-016eabdf7d90e3a72\"]
         }"
     
         NEW_VERSION=$(aws ec2 describe-launch-template-versions \
