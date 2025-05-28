@@ -1,9 +1,9 @@
 #!/bin/bash
 
-yum install -y aws-cli jq
+sudo apt-get update -y
+sudo apt-get install -y awscli jq
 
-APP_DIR="/home/ec2-user/app"
-
+APP_DIR="/home/ubuntu/app"
 JWT_SECRET_KEY=$(aws secretsmanager get-secret-value --secret-id prod/api/jwt --query SecretString --output text)
 OPENAI_SECRET_KEY=$(aws secretsmanager get-secret-value --secret-id prod/api/openai --query SecretString --output text)
 
@@ -14,6 +14,7 @@ JWT_EXPIRATION=2592000000
 OPENAI_SECRET_KEY=$OPENAI_SECRET_KEY
 EOF
 
+# docker-compose 실행
 cd $APP_DIR
-docker-compose down || true
-docker-compose up -d
+docker compose down || true
+docker compose up -d
