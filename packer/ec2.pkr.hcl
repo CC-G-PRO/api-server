@@ -8,14 +8,14 @@ packer {
 }
 
 source "amazon-ebs" "ec2" {
-  region           = "ap-northeast-2"
-  instance_type    = "t3.micro"
-  ssh_username     = "ubuntu"
-  ami_name         = "my-app-ami-{{timestamp}}"
-  iam_instance_profile = "secret-role"
-  vpc_id                  = "vpc-021af12dd2d6f3ad4"
-  subnet_id               = "subnet-076fbfebb4cac7303" //public subnet
-  associate_public_ip_address = true
+  region                        = "ap-northeast-2"
+  instance_type                 = "t3.micro"
+  ssh_username                  = "ubuntu"
+  ami_name                      = "my-app-ami-{{timestamp}}"
+  iam_instance_profile          = "secret-role"
+  vpc_id                        = "vpc-021af12dd2d6f3ad4"
+  subnet_id                     = "subnet-076fbfebb4cac7303"
+  associate_public_ip_address   = true
 
   source_ami_filter {
     filters = {
@@ -24,30 +24,37 @@ source "amazon-ebs" "ec2" {
       virtualization-type = "hvm"
     }
     most_recent = true
-    owners      = ["099720109477"]  
+    owners      = ["099720109477"]
   }
-  user_data = file("user-data.sh") 
+
+  user_data = file("user-data.sh")
 }
 
 build {
   sources = ["source.amazon-ebs.ec2"]
 
-provisioner "shell" {
-  inline = [
-    "sudo apt-get update -y",
-    "sudo apt-get install -y docker.io curl",
+  # Docker 및 Compose Plugin 설치
+  provisioner "shell" {
+    inline = [
+      "sudo apt-get update -y",
+      "sudo apt-get install -y ca-certificates curl gnupg",
 
-    "sudo systemctl start docker",
-    "sudo usermod -aG docker ubuntu",
-    "mkdir -p /home/ubuntu/app",
+      "sudo install -m 0755 -d /etc/apt/keyrings",
+      "curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg",
+      "sudo chmod a+r /etc/apt/keyrings/docker.gpg",
 
-    "mkdir -p ~/.docker/cli-plugins",
-    "curl -SL https://github.com/docker/compose/releases/download/v2.27.1/docker-compose-linux-x86_64 -o ~/.docker/cli-plugins/docker-compose",
-    "chmod +x ~/.docker/cli-plugins/docker-compose",
+      "echo \"deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo $VERSION_CODENAME) stable\" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null",
+      "sudo apt-get update -y",
 
-    "docker compose version"
-  ]
-}
+      "sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin",
+      "sudo systemctl enable docker",
+      "sudo systemctl start docker",
+      "sudo usermod -aG docker ubuntu",
+      "mkdir -p /home/ubuntu/app",
+
+      "docker compose version"
+    ]
+  }
 
   provisioner "file" {
     source      = "../docker-compose.yml"
@@ -67,8 +74,7 @@ provisioner "shell" {
   provisioner "shell" {
     inline = [
       "cd /home/ubuntu/app",
-      "sudo docker-compose build"
+      "docker compose build"
     ]
   }
-
 }
