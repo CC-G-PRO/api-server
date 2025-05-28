@@ -15,6 +15,7 @@ source "amazon-ebs" "ec2" {
   iam_instance_profile = "secret-role"
   vpc_id                  = "vpc-021af12dd2d6f3ad4"
   subnet_id               = "subnet-076fbfebb4cac7303" //public subnet
+  associate_public_ip_address = true
 
   source_ami_filter {
     filters = {
