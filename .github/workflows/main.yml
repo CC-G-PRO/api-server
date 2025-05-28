@@ -52,6 +52,7 @@ jobs:
                 \"DeviceIndex\": 0,
                 \"SubnetId\": \"subnet-09316defe683c840f\",
                 \"Groups\": [\"sg-016eabdf7d90e3a72\"]
+                }]
           }"
 
     - name: Update Auto Scaling Group to use latest Launch Template #rolling up 단계.
