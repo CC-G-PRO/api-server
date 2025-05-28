@@ -8,7 +8,9 @@ on:
 jobs:
   deploy: 
     runs-on: ubuntu-latest
-
+    defaults:
+      run:
+        working-directory : ./packer
     steps:
     - name : Checkout source
       uses : actions/checkout@v3
@@ -20,29 +22,73 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ap-northeast-2
 
+    - name: Setup Packer
+      uses: hashicorp/setup-packer@v2
+      with:
+        version: 1.9.2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+
     - name: Install jq
       run: sudo apt-get install -y jq
 
     - name: Build EC2 with Packer (create AMI)
       run: |
-        packer init ./packer
-        packer build ./packer/ec2.pkr.hcl
+        packer init .
+        packer build ec2.pkr.hcl
 
     - name: Update Launch Template with new AMI
+      id: update_lt
       run: |
-        AMI_ID=$(aws ec2 describe-images --owners self --query 'Images[*].{ID:ImageId,Time:CreationDate}' --output json | jq -r 'sort_by(.Time) | reverse | .[0].ID')
-        LATEST_VERSION=$(aws ec2 describe-launch-templates --launch-template-names my-launch-template --query "LaunchTemplates[0].LatestVersionNumber" --output text)
-        
-        aws ec2 create-launch-template-version \
+        # 최신 생성된 AMI ID 가져오기
+        AMI_ID=$(aws ec2 describe-images --owners self \
+          --query 'Images[*].{ID:ImageId,Time:CreationDate}' \
+          --output json | jq -r 'sort_by(.Time) | reverse | .[0].ID')
+
+        # Launch Template의 최신 버전 번호 확인
+        LATEST_VERSION=$(aws ec2 describe-launch-templates \
+          --launch-template-names api-server-templete \
+          --query "LaunchTemplates[0].LatestVersionNumber" \
+          --output text)
+
+        # 기존 Launch Template 데이터 가져오기
+        OLD_DATA=$(aws ec2 describe-launch-template-versions \
+          --launch-template-name api-server-templete \
+          --versions $LATEST_VERSION \
+          --query "LaunchTemplateVersions[0].LaunchTemplateData" \
+          --output json)
+
+        # 기존 데이터에서 AMI만 새로 바꾸기
+        NEW_DATA=$(echo "$OLD_DATA" | jq --arg AMI "$AMI_ID" '.ImageId = $AMI')
+
+        # 임시 파일에 JSON 저장 (따옴표 및 줄바꿈 처리)
+        echo "$NEW_DATA" > new-template-data.json
+
+        # 새로운 Launch Template 버전 생성
+        NEW_VERSION=$(aws ec2 create-launch-template-version \
           --launch-template-name api-server-templete \
           --source-version $LATEST_VERSION \
           --version-description "Deploy from GitHub Actions" \
-          --launch-template-data "{\"ImageId\":\"$AMI_ID\"}"
+          --launch-template-data file://new-template-data.json \
+          --query 'LaunchTemplateVersion.VersionNumber' \
+          --output text)
 
-    - name: Update Auto Scaling Group to use latest Launch Template #rolling up 단계.
+        # GitHub Actions output 변수 등록
+        echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+
+
+    - name: Update Auto Scaling Group to use latest Launch Template
+      run: |
+          echo "Using Launch Template version: ${{ steps.update_lt.outputs.new_version }}"
+          aws autoscaling update-auto-scaling-group \
+            --auto-scaling-group-name asg-web-server \
+            --launch-template "LaunchTemplateName=api-server-templete,Version=${{steps.update_lt.outputs.new_version}}"
+
+    - name: Start instance refresh for ASG
       run: |
         aws autoscaling start-instance-refresh \
-          --auto-scaling-group-name asg-api-server \
+          --auto-scaling-group-name asg-web-server \
           --strategy Rolling
 
 

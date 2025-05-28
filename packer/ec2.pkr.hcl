@@ -2,7 +2,7 @@ packer {
   required_plugins {
     amazon = {
       version = ">= 1.0.0"
-      source  = "hashicorp/amazon"
+      source  = "github.com/hashicorp/amazon"
     }
   }
 }
@@ -13,6 +13,9 @@ source "amazon-ebs" "ec2" {
   ssh_username     = "ec2-user"
   ami_name         = "my-app-ami-{{timestamp}}"
   iam_instance_profile = "secret-role"
+  vpc_id                  = "vpc-021af12dd2d6f3ad4"
+  subnet_id               = "subnet-076fbfebb4cac7303" //public subnet
+  associate_public_ip_address = true
 
   source_ami_filter {
     filters = {
@@ -24,7 +27,7 @@ source "amazon-ebs" "ec2" {
     owners      = ["amazon"]
   }
 
-  user_data = file("${path.module}/user-data.sh") 
+  user_data = file("user-data.sh") 
 
 }
 
