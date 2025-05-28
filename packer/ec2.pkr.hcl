@@ -67,7 +67,7 @@ provisioner "shell" {
   provisioner "shell" {
     inline = [
       "cd /home/ubuntu/app",
-      "sudo docker compose build"
+      "sudo docker-compose build"
     ]
   }
 
