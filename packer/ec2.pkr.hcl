@@ -63,12 +63,12 @@ build {
 
   provisioner "file" {
     source      = "../fastapi_server"
-    destination = "/home/ubuntu/app/fastapi-server"
+    destination = "/home/ubuntu/app/fastapi_server"
   }
 
   provisioner "file" {
     source      = "../spring_server"
-    destination = "/home/ubuntu/app/spring-server"
+    destination = "/home/ubuntu/app/spring_server"
   }
 
   provisioner "shell" {
