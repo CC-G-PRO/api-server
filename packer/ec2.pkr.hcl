@@ -19,12 +19,7 @@ source "amazon-ebs" "ec2" {
   ami_name         = "my-app-ami-{{timestamp}}"
   iam_instance_profile = "secret-role"
   vpc_id                  = "vpc-021af12dd2d6f3ad4"
-  subnet_id               = "subnet-09316defe683c840f"
-  security_group_id       = "sg-016eabdf7d90e3a72"
-
-  ssh_proxy_host          = var.bastion_host
-  ssh_proxy_username      = var.bastion_user
-  ssh_private_key_file    = var.bastion_key_path
+  subnet_id               = "subnet-076fbfebb4cac7303"
 
   source_ami_filter {
     filters = {
