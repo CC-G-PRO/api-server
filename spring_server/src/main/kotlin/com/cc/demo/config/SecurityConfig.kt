@@ -36,6 +36,10 @@ class SecurityConfig(
                 it
                     .requestMatchers("/auth/**",
                         "/h2-console/**",
+                        "/health",
+                        "/v3/api-docs/**",
+                        "/swagger-ui/**",
+                        "/swagger-ui.html",
                         ).permitAll()
                   //  .requestMatchers("/actuator/health", "/actuator/info").permitAll() // for health check
                   //  .anyRequest().authenticated()   // 실제로 이거 써야함

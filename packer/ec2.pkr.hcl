@@ -24,7 +24,7 @@ source "amazon-ebs" "ec2" {
     owners      = ["amazon"]
   }
 
-    user_data_file = "${path.module}/user-data.sh"
+  user_data = file("${path.module}/user-data.sh") 
 
 }
 
