@@ -50,12 +50,12 @@ build {
   }
 
   provisioner "file" {
-    source      = "../fastapi-server"
+    source      = "../fastapi_server"
     destination = "/home/ec2-user/app/fastapi-server"
   }
 
   provisioner "file" {
-    source      = "../spring-server"
+    source      = "../spring_server"
     destination = "/home/ec2-user/app/spring-server"
   }
 
