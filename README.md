@@ -32,3 +32,6 @@ spring:
 
 ### CICD
 main 브랜치에 commit 이 발생할 때 deploy 됨.
+delpoy 는 AMI 를 생성하는 packer 사용 (/packer)
+user-data 는 ec2에 올라갔을 대 할 작업 (ENV 주입이 이때 발생함. ) - secret key 에는 다 설정했음.
+.hlc 는 pakcer setting. 어떤 ec2 이미지 생성할 것인지 
