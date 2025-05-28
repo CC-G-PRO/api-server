@@ -38,7 +38,7 @@ jobs:
     - name: Update Launch Template with new AMI
       run: |
         AMI_ID=$(aws ec2 describe-images --owners self --query 'Images[*].{ID:ImageId,Time:CreationDate}' --output json | jq -r 'sort_by(.Time) | reverse | .[0].ID')
-        LATEST_VERSION=$(aws ec2 describe-launch-templates --launch-template-names my-launch-template --query "LaunchTemplates[0].LatestVersionNumber" --output text)
+        LATEST_VERSION=$(aws ec2 describe-launch-templates --launch-template-names api-server-templete --query "LaunchTemplates[0].LatestVersionNumber" --output text)
         
         aws ec2 create-launch-template-version \
           --launch-template-name api-server-templete \
