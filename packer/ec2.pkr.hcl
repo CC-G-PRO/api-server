@@ -10,7 +10,7 @@ packer {
 source "amazon-ebs" "ec2" {
   region           = "ap-northeast-2"
   instance_type    = "t3.micro"
-  ssh_username     = "ec2-user"
+  ssh_username     = "ubuntu"
   ami_name         = "my-app-ami-{{timestamp}}"
   iam_instance_profile = "secret-role"
   vpc_id                  = "vpc-021af12dd2d6f3ad4"
@@ -26,7 +26,6 @@ source "amazon-ebs" "ec2" {
     most_recent = true
     owners      = ["099720109477"]  
   }
-  ssh_username = "ubuntu"
   user_data = file("user-data.sh") 
 }
 
