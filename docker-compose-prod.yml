@@ -1,5 +1,14 @@
 services:
   spring:
+    environment:
+      - JWT_SECRET_KEY
+      - JWT_EXPIRATION
+      - OPENAI_SECRET_KEY
+      - SPRING_PROFILES_ACTIVE
+      - SPRING_DATASOURCE_URL
+      - SPRING_DATASOURCE_USERNAME
+      - SPRING_DATASOURCE_PASSWORD
+
     build:
       context: ./spring_server
       dockerfile: Dockerfile.dev  #dev일 때 dev용 Dockerfile 사용
