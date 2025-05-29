@@ -58,7 +58,8 @@ dependencies {
 
     implementation(platform("io.awspring.cloud:spring-cloud-aws-dependencies:3.0.1"))
 
-    implementation("mysql : mysql -connector - java:8.0.33")
+    implementation("mysql:mysql-connector-java:8.0.33")
+
 }
 
 kotlin {

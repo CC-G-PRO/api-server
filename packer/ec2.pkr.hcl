@@ -47,8 +47,8 @@ build {
   }
 
   provisioner "file" {
-    source      = "../docker-compose.yml"
-    destination = "/home/ec2-user/app/docker-compose-prod.yml"
+    source      = "../docker-compose-prod.yml"
+    destination = "/home/ec2-user/app/docker-compose.yml"
   }
 
   provisioner "file" {
