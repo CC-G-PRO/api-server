@@ -19,18 +19,28 @@ OPENAI_SECRET_KEY=$(echo "$OPENAI_SECRET_JSON" | jq -r '.OPENAI_SECRET_KEY')
 JWT_SECRET_JSON=$(aws --region $AWS_REGION secretsmanager get-secret-value --secret-id prod/api/jwt --query SecretString --output text)
 JWT_SECRET_KEY=$(echo "$JWT_SECRET_JSON" | jq -r '.JWT_SECRET_KEY')
 
+SPRING_DB_SECRET_JSON=$(aws --region "$AWS_REGION" secretsmanager get-secret-value --secret-id prod/spring-db-config --query SecretString --output text)
+
+SPRING_DATASOURCE_URL=$(echo "$SPRING_DB_SECRET_JSON" | jq -r '.SPRING_DATASOURCE_URL')
+SPRING_DATASOURCE_USERNAME=$(echo "$SPRING_DB_SECRET_JSON" | jq -r '.SPRING_DATASOURCE_USERNAME')
+SPRING_DATASOURCE_PASSWORD=$(echo "$SPRING_DB_SECRET_JSON" | jq -r '.SPRING_DATASOURCE_PASSWORD')
+
+
 # .env 생성
 cat <<EOF > $APP_DIR/.env
 SPRING_PROFILES_ACTIVE=prod
 JWT_SECRET_KEY=$JWT_SECRET_KEY
 JWT_EXPIRATION=2592000000
 OPENAI_SECRET_KEY=$OPENAI_SECRET_KEY
+SPRING_DB_SECRET_JSON=$SPRING_DATASOURCE_URL
+SPRING_DATASOURCE_USERNAME=$SPRING_DATASOURCE_USERNAME
+SPRING_DATASOURCE_PASSWORD=$SPRING_DATASOURCE_PASSWORD
 EOF
 
 chown ec2-user:ec2-user $APP_DIR/.env
 
 cd $APP_DIR
 docker-compose down || true
-docker-compose up -d
+docker-compose -f docker-compose-prod.yml up -d
 
 echo "===== User Data Script Completed ====="

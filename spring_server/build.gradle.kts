@@ -58,9 +58,7 @@ dependencies {
 
     implementation(platform("io.awspring.cloud:spring-cloud-aws-dependencies:3.0.1"))
 
-    //AWS Secrets Manager
-    implementation("io.awspring.cloud:spring-cloud-aws-starter-secrets-manager")
-
+    implementation("mysql : mysql -connector - java:8.0.33")
 }
 
 kotlin {
