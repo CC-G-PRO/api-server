@@ -41,6 +41,6 @@ chown ec2-user:ec2-user $APP_DIR/.env
 
 cd $APP_DIR
 docker-compose down || true
-docker-compose -f docker-compose-prod.yml up -d
+docker-compose up -d
 
 echo "===== User Data Script Completed ====="
