@@ -6,10 +6,12 @@ import com.cc.demo.repository.LectureRepository
 import com.cc.demo.repository.UserRepository
 import mu.KotlinLogging
 import org.springframework.boot.CommandLineRunner
+import org.springframework.context.annotation.Profile
 import org.springframework.core.annotation.Order
 import org.springframework.stereotype.Component
 import java.time.LocalDateTime
 
+@Profile("dev")
 @Order(3)
 @Component
 class LectureCartDataInitializer (

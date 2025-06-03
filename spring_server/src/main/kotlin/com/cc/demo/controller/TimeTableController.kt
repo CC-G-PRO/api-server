@@ -8,10 +8,12 @@ import com.cc.demo.response.CommonResponse
 import com.cc.demo.response.GraduationEvaluationPreview
 import com.cc.demo.response.RecommendedTimetableResponse
 import com.cc.demo.response.TimetableResponse
+import com.cc.demo.security.UserPrincipal
 import com.cc.demo.service.NLPService
 import com.cc.demo.service.TimeTableService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -36,14 +38,14 @@ class TimeTableController (
     @GetMapping("/random")
     fun generate(
         @RequestParam(name = "min_credit", required = true) minCredit: Int,
-        @RequestParam(name = "max_credit", required = true) maxCredit: Int
+        @RequestParam(name = "max_credit", required = true) maxCredit: Int,
+        @AuthenticationPrincipal user: UserPrincipal,
 
-    ): ResponseEntity<Any> {
+        ): ResponseEntity<Any> {
 
         return try {
 
-            val userId : Long = 1 //Todo : 여기 실제로는 jwt 기반으로 고쳐야 함. 일단 테스트용
-
+            val userId : Long = user.id
             val timetables = timeTableService.regenerateTimeTables(userId, minCredit, maxCredit)
 
             val response = RecommendedTimetableResponse(
@@ -68,10 +70,11 @@ class TimeTableController (
 
     @PostMapping("/random")
     fun filter(
-        @RequestBody req: TimeTableFileterRequest
-    ): ResponseEntity<Any> {
+        @RequestBody req: TimeTableFileterRequest,
+        @AuthenticationPrincipal user: UserPrincipal,
+        ): ResponseEntity<Any> {
         return try {
-            val userId: Long = 1
+            val userId: Long = user.id
 
             val prompt = nlpService.generatePrompt(req.filter)
 
@@ -98,8 +101,9 @@ class TimeTableController (
     @GetMapping("/")
     fun getList(
         @RequestParam(name = "type", required = true) type : TimeTableType,
-    ): ResponseEntity<Any> {
-        val userId: Long = 1
+        @AuthenticationPrincipal user: UserPrincipal,
+        ): ResponseEntity<Any> {
+        val userId: Long = user.id
 
         return try {
             val results = when (type) {
@@ -123,8 +127,9 @@ class TimeTableController (
     @PostMapping("/")
     fun create(
         @RequestBody req: TimeTableCreateRequest,
+        @AuthenticationPrincipal user: UserPrincipal,
         ): ResponseEntity<Any> {
-        val userId: Long = 1
+        val userId: Long = user.id
 
         return try{
             val result : TimetableResponse = timeTableService.createTimeTables(req, userId)
@@ -143,8 +148,11 @@ class TimeTableController (
 
     //특정 id 의 timetable 가져옴.
     @GetMapping("/{id}")
-    fun get(@PathVariable id: Long): ResponseEntity<Any> {
-        val userId: Long = 1
+    fun get(
+        @PathVariable id: Long,
+        @AuthenticationPrincipal user: UserPrincipal,
+    ): ResponseEntity<Any> {
+        val userId: Long = user.id
 
         return try {
             val timeTable: TimetableResponse = timeTableService.getTimetableDetails(userId,id)
@@ -168,10 +176,13 @@ class TimeTableController (
 
     //저장이 필요한 경우에는 단순히 id 값만 넘기면 되는 로직임.
     @PutMapping("/{id}")
-    fun put(@PathVariable id: Long, @RequestBody request: TimeTableUpdateRequest): ResponseEntity<Any> {
+    fun put(@PathVariable id: Long,
+            @RequestBody request: TimeTableUpdateRequest,
+            @AuthenticationPrincipal user: UserPrincipal,
+    ): ResponseEntity<Any> {
 
         return try {
-            val userId : Long = 1
+            val userId : Long = user.id
             val res : TimetableResponse =  timeTableService.updateTimeTable(content = request, userId = userId, timeTableId = id)
 
             ResponseEntity.ok(CommonResponse(

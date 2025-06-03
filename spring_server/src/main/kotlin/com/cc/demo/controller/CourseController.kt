@@ -2,9 +2,11 @@ package com.cc.demo.controller
 
 import com.cc.demo.request.CourseSearchRequest
 import com.cc.demo.response.CourseResponse
+import com.cc.demo.security.UserPrincipal
 import com.cc.demo.service.LectureService
 import mu.KotlinLogging
 import org.springframework.http.ResponseEntity
+import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
@@ -21,11 +23,10 @@ class CourseController(
     @PostMapping("/courses")
     fun searchCourses(
         @RequestBody request: CourseSearchRequest,
-    ): ResponseEntity<List<CourseResponse>> {
+        @AuthenticationPrincipal user: UserPrincipal,
+        ): ResponseEntity<List<CourseResponse>> {
         log.info { "📥 /courses 요청 수신: $request" }
-
-        // TODO: 테스트 목적, 임시 userId = 1
-        val userId = 1L
+        val userId = user.id
         val result = courseService.searchLectures(request, userId)
 
         log.info { "📤 /courses 응답 완료 - 결과 강의 수: ${result.size}" }
