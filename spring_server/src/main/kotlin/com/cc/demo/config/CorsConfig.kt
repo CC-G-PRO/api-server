@@ -12,7 +12,7 @@ class CorsConfig {
         return object : WebMvcConfigurer {
             override fun addCorsMappings(registry: CorsRegistry) {
                 registry.addMapping("/**")
-                    .allowedOriginPatterns("*") /////////// frontend 도메인 명시 필요
+                    .allowedOriginPatterns("https://www.sugang.click")
                     .allowedMethods("*")
                     .allowedHeaders("*")
                     .allowCredentials(true)
