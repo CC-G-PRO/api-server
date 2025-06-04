@@ -44,7 +44,7 @@ class ReportParserController (
         }
     }
 
-    @PostMapping("/upload", consumes = ["multipart/form-data"])
+    @PostMapping("/", consumes = ["multipart/form-data"])
     fun handlePdfUpload(
         @RequestParam("file") file: MultipartFile?,
         @AuthenticationPrincipal user: UserPrincipal,
