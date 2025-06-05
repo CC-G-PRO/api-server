@@ -3,6 +3,7 @@ package com.cc.demo.client
 import com.cc.demo.response.AiFilterResponse
 import com.cc.demo.entity.Lecture
 import mu.KotlinLogging
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpEntity
 import org.springframework.http.HttpHeaders
@@ -14,11 +15,14 @@ private val log = KotlinLogging.logger {}
 
 @Component
 class AiClient(
-    private val restTemplate: RestTemplate = RestTemplate()
+    private val restTemplate: RestTemplate,
+
+    @Value("\${ai-server.base-url}")
+    private val AI_BASE_URL: String
 ) {
-    companion object {
-        private const val AI_URL = "http://ai-server.recommend-api"
-    }
+
+    private val aiRecommendationEndpoint = "${AI_BASE_URL}/recommend-api"
+
 
     fun filterByKeyword(keywords: List<String>, lectures: List<Lecture>): List<Lecture> {
         log.info { "🧠 AI 필터 요청 시작 - 키워드: $keywords, 강의 수: ${lectures.size}" }
@@ -27,7 +31,7 @@ class AiClient(
             "userWantedKeywords" to keywords,
             "filteredLectures" to lectures.map { lecture ->
                 mapOf(
-                    "lectureId" to lecture.id,
+                    "lectureId" to lecture.id.toString(), // ai server에서 string으로 받고 있음
                     "courseName" to lecture.subjectName,
                     "aiDescription" to lecture.subject.aiDescription
                 )
@@ -41,7 +45,7 @@ class AiClient(
         val requestEntity = HttpEntity(payload, headers)
 
         val response = restTemplate.exchange(
-            AI_URL,
+            aiRecommendationEndpoint,
             org.springframework.http.HttpMethod.POST,
             requestEntity,
             /**
