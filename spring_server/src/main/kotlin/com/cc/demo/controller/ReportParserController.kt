@@ -7,6 +7,7 @@ import com.cc.demo.service.PdfParsingService
 import com.cc.demo.service.UserTakenCouseService
 import org.apache.pdfbox.pdmodel.PDDocument
 import org.apache.pdfbox.text.PDFTextStripper
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.PostMapping
@@ -44,7 +45,7 @@ class ReportParserController (
         }
     }
 
-    @PostMapping("/", consumes = ["multipart/form-data"])
+    @PostMapping("", consumes = ["multipart/form-data"])
     fun handlePdfUpload(
         @RequestParam("file") file: MultipartFile?,
         @AuthenticationPrincipal user: UserPrincipal,
@@ -52,9 +53,7 @@ class ReportParserController (
         if (file == null || file.isEmpty) {
             return ResponseEntity.badRequest().body("파일이 없습니다.")
         }
-
         return try {
-
             val response = pdfParsingService.processReportUpload(file, user.id) //userId 말고 user 넘기게 고쳐야함.
             ResponseEntity.ok(response)
 
