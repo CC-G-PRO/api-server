@@ -17,3 +17,6 @@ jwt:
 openai:
   model: gpt-4o-mini
   secret-key: ${OPENAI_SECRET_KEY:no_valuable_value} # 의미 없는 default 값 추가함
+
+ai-server:
+  base-url: http://test-ai-alb-1296384406.ap-northeast-2.elb.amazonaws.com:8000
