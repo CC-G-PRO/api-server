@@ -13,7 +13,7 @@ class CorsConfig {
             override fun addCorsMappings(registry: CorsRegistry) {
                 registry.addMapping("/**")
                     .allowedOriginPatterns(
-                        "https://www.sugang.click",
+                        "https://*.sugang.click",
                         "http://localhost:3000",
                         "http://127.0.0.1:3000"
                     )
