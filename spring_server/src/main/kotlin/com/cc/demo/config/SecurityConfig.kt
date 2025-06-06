@@ -12,12 +12,15 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
+import org.springframework.web.cors.CorsConfigurationSource
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 class SecurityConfig(
-    private val jwtAuthenticationFilter: JwtAuthenticationFilter
+    private val jwtAuthenticationFilter: JwtAuthenticationFilter,
+    private val corsConfigurationSource: CorsConfigurationSource
+
 ) {
 
     private val log = KotlinLogging.logger {}
@@ -27,7 +30,7 @@ class SecurityConfig(
         log.info { "Configuring security filter chain" }
 
         http
-            .cors()
+            .cors { it.configurationSource(corsConfigurationSource) }
             .csrf { it.disable() }
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .formLogin { it.disable() }
@@ -55,3 +58,4 @@ class SecurityConfig(
         return http.build()
     }
 }
+
