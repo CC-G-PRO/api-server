@@ -27,6 +27,7 @@ class SecurityConfig(
         log.info { "Configuring security filter chain" }
 
         http
+            .cors()
             .csrf { it.disable() }
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .formLogin { it.disable() }
