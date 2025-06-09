@@ -58,7 +58,8 @@ class  LectureCartService(
             CartItemResponse(
                 lecture_id = it.lecture.id,
                 course_name = it.lecture.subjectName,
-                priority = it.priority
+                priority = it.priority,
+                item_id = it.id
             )
         }
     }
