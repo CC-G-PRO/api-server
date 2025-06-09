@@ -44,10 +44,11 @@ class SecurityConfig(
                         "/v3/api-docs/**",
                         "/swagger-ui/**",
                         "/swagger-ui.html",
+                        "/error",
                         ).permitAll()
                   //  .requestMatchers("/actuator/health", "/actuator/info").permitAll() // for health check
-                  //  .anyRequest().authenticated()   // 실제로 이거 써야함
-                    .anyRequest().authenticated()
+                    .anyRequest().authenticated()   // 실제로 이거 써야함
+//                    .anyRequest().authenticated()
             }
 
             .headers { it.frameOptions { it.sameOrigin() } }

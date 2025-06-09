@@ -1,6 +1,7 @@
 package com.cc.demo.controller
 
 import com.cc.demo.enumerate.TimeTableType
+import com.cc.demo.exception.OverlappingLectureException
 import com.cc.demo.request.TimeTableCreateRequest
 import com.cc.demo.request.TimeTableFileterRequest
 import com.cc.demo.request.TimeTableUpdateRequest
@@ -11,6 +12,7 @@ import com.cc.demo.response.TimetableResponse
 import com.cc.demo.security.UserPrincipal
 import com.cc.demo.service.NLPService
 import com.cc.demo.service.TimeTableService
+import mu.KotlinLogging
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
@@ -25,8 +27,7 @@ import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 
-// TODO: 추후 JWT에서 사용자 ID 추출하도록 수정
-//TODO :  졸업 사정 진단표 기반으로 특정 시간표와 이수 후 졸업 사정 진단표 충족하는지 여부 조사. <- 이거 어떻게 할건지도 한 번 알아봐야겟다.
+private val log = KotlinLogging.logger {}
 
 @RequestMapping("/timetable")
 @RestController
@@ -40,10 +41,10 @@ class TimeTableController (
         @RequestParam(name = "min_credit", required = true) minCredit: Int,
         @RequestParam(name = "max_credit", required = true) maxCredit: Int,
         @AuthenticationPrincipal user: UserPrincipal,
-
         ): ResponseEntity<Any> {
 
         return try {
+            log.info { "🟢 time table 요청 수신" }
 
             val userId : Long = user.id
             val timetables = timeTableService.regenerateTimeTables(userId, minCredit, maxCredit)
@@ -53,7 +54,7 @@ class TimeTableController (
                     TimetableResponse.from(timetable, lectures)
                 }
             )
-
+            log.info { "🟢 time table 응답 완료" }
             ResponseEntity.ok(
                 CommonResponse(
                     message = "Success to generate timetable",
@@ -74,6 +75,8 @@ class TimeTableController (
         @AuthenticationPrincipal user: UserPrincipal,
         ): ResponseEntity<Any> {
         return try {
+            log.info { "🟢 time table filter 요청 수신" }
+
             val userId: Long = user.id
 
             val prompt = nlpService.generatePrompt(req.filter)
@@ -83,6 +86,7 @@ class TimeTableController (
             val allTimetables = timeTableService.getTimeTables(userId, type = TimeTableType.GENERATED)
             val filteredTimetables = timeTableService.filterTimeTable(filter, allTimetables)
 
+            log.info { "🟢 time table filter 응답 완료" }
             ResponseEntity.ok(
                 CommonResponse(
                     message = "Successfully filtered timetables",
@@ -96,8 +100,6 @@ class TimeTableController (
         }
     }
 
-    //TODO : lectures 시간표 겹치는지 확인해주고 create, update 할 것.
-    //type 지정으로 무작위 생성인지 , 사용자가 커스텀한 건지 구분해서 가져올 수 있음.
     @GetMapping("/")
     fun getList(
         @RequestParam(name = "type", required = true) type : TimeTableType,
@@ -141,6 +143,12 @@ class TimeTableController (
                 )
             )
         }
+        catch (e: OverlappingLectureException) {
+            ResponseEntity.status(400).body(CommonResponse(
+                message = e.message ?: "시간표 겹침 오류",
+                valid = false
+            ))
+        }
         catch (e: Exception){
             ResponseEntity.status(500).body(e.message) //response 부분 status code 정밀하게 해야함.
         }
@@ -169,7 +177,8 @@ class TimeTableController (
                     data = data,
                 )
             )
-        } catch (e: Exception) {
+        }
+        catch (e: Exception) {
             ResponseEntity.status(500).body(e.message)
         }
     }
@@ -191,9 +200,17 @@ class TimeTableController (
                 data = res
             ))
 
-        } catch (e: IllegalArgumentException) {
+        }
+        catch (e: IllegalArgumentException) {
             ResponseEntity.status(404).body(mapOf("error" to e.message))
-        } catch (e: Exception) {
+        }
+        catch (e: OverlappingLectureException) {
+            ResponseEntity.status(400).body(CommonResponse(
+                message = e.message ?: "시간표 겹침 오류",
+                valid = false
+            ))
+        }
+        catch (e: Exception) {
             ResponseEntity.status(500).body(mapOf("error" to "서버 오류가 발생했습니다.", "details" to e.localizedMessage))
         }
     }
