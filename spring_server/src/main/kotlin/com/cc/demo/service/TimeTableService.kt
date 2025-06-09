@@ -8,6 +8,7 @@ import com.cc.demo.enumerate.Category
 import com.cc.demo.enumerate.IndustryCode
 import com.cc.demo.enumerate.MajorCategory
 import com.cc.demo.enumerate.TimeTableType
+import com.cc.demo.exception.OverlappingLectureException
 import com.cc.demo.repository.GraduationEvaluationRepository
 import com.cc.demo.repository.LectureCartRepository
 import com.cc.demo.repository.LectureRepository
@@ -153,66 +154,154 @@ class TimeTableService(
         return false
     }
 
-    @Transactional
-    fun createTimeTables(content : TimeTableCreateRequest, userId : Long) : TimetableResponse {
-        val user = userRepository.findById(userId)
-            .orElseThrow { IllegalArgumentException("User를 찾을 수 없습니다!") }
+//    @Transactional
+//    fun createTimeTables(content : TimeTableCreateRequest, userId : Long) : TimetableResponse {
+//        val user = userRepository.findById(userId)
+//            .orElseThrow { IllegalArgumentException("User를 찾을 수 없습니다!") }
+//
+//        //create timetable
+//        val timetable = TimeTable(user = user , createdAt = LocalDateTime.now() )
+//
+//        timetableRepository.save(timetable)
+//        if(content.lectures != null){
+//            val lectures: List<TimeTableLecture> = content.lectures.map { lectureId ->
+//                val lecture = lectureRepository.findById(lectureId)
+//                    .orElseThrow { IllegalArgumentException("해당 강의를 찾을 수 없습니다") }
+//
+//                val ttl = TimeTableLecture(
+//                    timetable = timetable,
+//                    lecture = lecture
+//                )
+//                timetableLectureRepository.save(ttl)
+//
+//                ttl
+//            }
+//            return TimetableResponse.from(timetable, lectures)
+//        }
+//        return TimetableResponse.from(timetable,  emptyList())
+//    }
 
-        //create timetable
-        val timetable = TimeTable(user = user , createdAt = LocalDateTime.now() )
+    fun checkLectureOverlap(lectures: List<Lecture>) {
+        val lectureTimes = lectures.flatMap { it.times }
 
-        timetableRepository.save(timetable)
-        if(content.lectures != null){
-            val lectures: List<TimeTableLecture> = content.lectures.map { lectureId ->
-                val lecture = lectureRepository.findById(lectureId)
-                    .orElseThrow { IllegalArgumentException("해당 강의를 찾을 수 없습니다") }
+        for (i in lectureTimes.indices) {
+            for (j in i + 1 until lectureTimes.size) {
+                val t1 = lectureTimes[i]
+                val t2 = lectureTimes[j]
 
-                val ttl = TimeTableLecture(
-                    timetable = timetable,
-                    lecture = lecture
-                )
-                timetableLectureRepository.save(ttl)
-
-                ttl
+                if (t1.day == t2.day &&
+                    t1.startTime < t2.endTime &&
+                    t2.startTime < t1.endTime
+                ) {
+                    throw OverlappingLectureException("강의 시간표가 겹치는 강의가 존재합니다: ${t1.lecture.subjectName} 와 ${t2.lecture.subjectName}")
+                }
             }
-            return TimetableResponse.from(timetable, lectures)
         }
-        return TimetableResponse.from(timetable,  emptyList())
     }
 
     @Transactional
-    fun updateTimeTable(
-        content : TimeTableUpdateRequest,
-        userId : Long,
-        timeTableId : Long,
-    ) : TimetableResponse {
+    fun createTimeTables(content: TimeTableCreateRequest, userId: Long): TimetableResponse {
         val user = userRepository.findById(userId)
+            .orElseThrow { IllegalArgumentException("User를 찾을 수 없습니다!") }
+
+        val lecturesFromRequest = content.lectures ?: emptyList()
+
+        val lectures = lecturesFromRequest.map { lectureId ->
+            lectureRepository.findById(lectureId)
+                .orElseThrow { OverlappingLectureException("강의 시간표가 겹치는 강의가 존재합니다") }
+        }
+
+        checkLectureOverlap(lectures)
+
+        val timetable = TimeTable(user = user, createdAt = LocalDateTime.now())
+        timetableRepository.save(timetable)
+
+        val timetableLectures: List<TimeTableLecture> = lectures.map { lecture ->
+            val ttl = TimeTableLecture(
+                timetable = timetable,
+                lecture = lecture
+            )
+            timetableLectureRepository.save(ttl)
+            ttl
+        }
+
+        return TimetableResponse.from(timetable, timetableLectures)
+    }
+
+
+//    @Transactional
+//    fun updateTimeTable(
+//        content : TimeTableUpdateRequest,
+//        userId : Long,
+//        timeTableId : Long,
+//    ) : TimetableResponse {
+//        val user = userRepository.findById(userId)
+//
+//        val timetable = timetableRepository.findById(timeTableId)
+//            .orElseThrow {IllegalArgumentException("해당 시간표가 존재하지 않습니다. id=$timeTableId")  }
+//        if (timetable.user.id != userId) {
+//            throw IllegalArgumentException("해당 시간표가 존재하지 않습니다")
+//        }
+//        //timetable type 수정
+//        if( timetable.type != TimeTableType.CUSTOM ) {
+//            timetable.type = TimeTableType.CUSTOM
+//        }
+//
+//        val lectures: List<TimeTableLecture> = content.lectures?.map { it ->
+//            timetableLectureRepository.deleteByTimetableId(timetable.id)
+//
+//            val ttl = TimeTableLecture(
+//                timetable = timetable,
+//                lecture = lectureRepository.findById(it).
+//                    orElseThrow { IllegalArgumentException("해당 강의가 존재하지 않습니다.") }
+//            )
+//
+//            timetableLectureRepository.save(ttl)
+//
+//        } ?: emptyList()
+//
+//        return TimetableResponse.from(timetable, lectures)
+//    }
+
+    @Transactional
+    fun updateTimeTable(
+        content: TimeTableUpdateRequest,
+        userId: Long,
+        timeTableId: Long,
+        ): TimetableResponse {
+        val user = userRepository.findById(userId)
+            .orElseThrow { IllegalArgumentException("User를 찾을 수 없습니다!") }
 
         val timetable = timetableRepository.findById(timeTableId)
-            .orElseThrow {IllegalArgumentException("해당 시간표가 존재하지 않습니다. id=$timeTableId")  }
+            .orElseThrow { IllegalArgumentException("해당 시간표가 존재하지 않습니다. id=$timeTableId") }
+
         if (timetable.user.id != userId) {
-            throw IllegalArgumentException("해당 시간표가 존재하지 않습니다")
+            throw IllegalArgumentException("권한이 없습니다.")
         }
-        //timetable type 수정
-        if( timetable.type != TimeTableType.CUSTOM ) {
+
+        if (timetable.type != TimeTableType.CUSTOM) {
             timetable.type = TimeTableType.CUSTOM
         }
 
-        val lectures: List<TimeTableLecture> = content.lectures?.map { it ->
-            //all timetable lecture item will be flushed
-            timetableLectureRepository.deleteByTimetableId(timetable.id)
-
-            val ttl = TimeTableLecture(
-                timetable = timetable,
-                lecture = lectureRepository.findById(it).
-                    orElseThrow { IllegalArgumentException("해당 강의가 존재하지 않습니다.") }
-            )
-
-            timetableLectureRepository.save(ttl)
-
+        val lectures: List<Lecture> = content.lectures?.map { lectureId ->
+            lectureRepository.findById(lectureId)
+                .orElseThrow { IllegalArgumentException("해당 강의가 존재하지 않습니다.") }
         } ?: emptyList()
 
-        return TimetableResponse.from(timetable, lectures)
+        checkLectureOverlap(lectures)
+
+        timetableLectureRepository.deleteByTimetableId(timetable.id)
+
+        val timetableLectures: List<TimeTableLecture> = lectures.map { lecture ->
+            val ttl = TimeTableLecture(
+                timetable = timetable,
+                lecture = lecture
+            )
+            timetableLectureRepository.save(ttl)
+            ttl
+        }
+
+        return TimetableResponse.from(timetable, timetableLectures)
     }
 
     fun filterTimeTable(filter : TimeTableFilter, timetables: List<TimetableResponse>) : List<TimetableResponse> {
