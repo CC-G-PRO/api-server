@@ -56,7 +56,6 @@ class ReportParserController (
         return try {
             val response = pdfParsingService.processReportUpload(file, user.id) //userId 말고 user 넘기게 고쳐야함.
             ResponseEntity.ok(response)
-ㅌ
         } catch (e: Exception) {
             ResponseEntity.internalServerError().body("FastAPI 요청 실패: ${e.message}")
         }
