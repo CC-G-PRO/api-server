@@ -19,7 +19,7 @@ class UserTakenCouseService (
         val subjects = courseInfos.map {
             UserTakenSubject(
                 user = user,
-                subjectCode = it.subjectCode,
+                subjectCode = it.lectureCode,
                 subjectName = it.subjectName,
                 enrollYear = it.enrollYear.toInt(),
                 enrollSemester = it.enrollSemester.toInt(),
