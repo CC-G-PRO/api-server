@@ -48,7 +48,6 @@ class SecurityConfig(
                         ).permitAll()
                   //  .requestMatchers("/actuator/health", "/actuator/info").permitAll() // for health check
                     .anyRequest().authenticated()   // 실제로 이거 써야함
-//                    .anyRequest().authenticated()
             }
 
             .headers { it.frameOptions { it.sameOrigin() } }

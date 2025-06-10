@@ -386,8 +386,8 @@ class TimeTableService(
 
         //user 학번에 맞는 교육과정 표 가져오는 거임.
 
-        val alreadyTakenSubjects = userTakenSubjectRepository.findByUserId(userId).map { it.subjectName }.toSet()
-        val newCourses = tableDetail.courses.filter { it.courseName !in alreadyTakenSubjects } //재수강 과목은 할당하지 않음.
+        val alreadyTakenSubjects = userTakenSubjectRepository.findByUserId(userId).map { it.subjectCode }.toSet()
+        val newCourses = tableDetail.courses.filter { it.subjectCode !in alreadyTakenSubjects } //재수강 과목은 할당하지 않음.
         val majorCategory  = curriculumService.getMajorCategoryMapByEntryYear(currentInfo.entryYear)
 
         var updated = currentInfo.copy(
@@ -398,7 +398,7 @@ class TimeTableService(
             majorBasicCreditsEarned = currentInfo.majorBasicCreditsEarned,
             majorRequiredCreditsEarned = currentInfo.majorRequiredCreditsEarned,
             majorElectiveCreditsEarned = currentInfo.majorElectiveCreditsEarned,
-            majorIndustryCreditsEarned = currentInfo.majorRequiredCreditsEarned,
+            majorIndustryCreditsEarned = currentInfo.majorIndustryCreditsEarned,
 
             englishCourseCount = currentInfo.englishCourseCount,
         )
@@ -484,6 +484,4 @@ class TimeTableService(
         val lectures = timetableLectureRepository.findByTimetableId(timetable.id)
         return TimetableResponse.from(timetable, lectures)
     }
-
-
 }
