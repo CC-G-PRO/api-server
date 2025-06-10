@@ -26,7 +26,7 @@ class NLPService (
         - excludeSubjects: Subjects that must not appear. Any timetable containing these is excluded.
         - includeProfessors: Professors that must teach at least one course in the timetable.
         - excludeProfessors: Professors whose courses should be excluded from the timetable.
-        - allowedDays: Days of the week when classes are allowed. Timetables with classes on other days are excluded.
+        - allowedDays: Days of the week when classes are allowed. Timetables with classes on other days are excluded. Note: The allowedDays field must use values from the com.cc.demo.enumerate.DayOfWeek enum (i.e., Mon, Tue, Wed, Thu, Fri).
         - minFreeHours: Minimum break time (in hours) required between classes on the same day.
         - maxClassesPerDay: Maximum number of classes allowed per day.
         - excludeBeforeMinutes: Exclude timetables with classes starting before 9:00 AM plus this many minutes.
