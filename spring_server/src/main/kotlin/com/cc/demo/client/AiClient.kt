@@ -57,7 +57,12 @@ class AiClient(
         val filtered = response.body?.filteredLectures ?: emptyList()
         log.info { "✅ AI 응답 수신 완료 - 필터링된 강의 수: ${filtered.size}" }
 
-        val filteredIds = filtered.map { it.lectureId }
-        return lectures.filter { it.id in filteredIds }
+        val lectureMap = lectures.associateBy { it.id }
+
+        return filtered.mapNotNull {
+            val lectureIdLong = it.lectureId
+            lectureIdLong.let { id -> lectureMap[id] }
+        }
+
     }
 }
